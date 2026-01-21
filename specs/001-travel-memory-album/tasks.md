@@ -66,35 +66,35 @@
 
 ### Tests for User Story 1 (REQUIRED)
 
-- [ ] T028 [P] [US1] Contract tests for trips endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/trips.spec.ts
-- [ ] T029 [P] [US1] Contract tests for moments endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/moments.spec.ts
-- [ ] T030 [P] [US1] Integration test for trip + moment flow in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/trip-moment-flow.spec.ts
-- [ ] T031 [P] [US1] E2E test for trip creation + media upload in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/trip-flow.spec.ts
+- [X] T028 [P] [US1] Contract tests for trips endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/trips.spec.ts
+- [X] T029 [P] [US1] Contract tests for moments endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/moments.spec.ts
+- [X] T030 [P] [US1] Integration test for trip + moment flow in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/trip-moment-flow.spec.ts
+- [X] T031 [P] [US1] E2E test for trip creation + media upload in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/trip-flow.spec.ts
 
 ### Implementation for User Story 1
 
-- [ ] T032 [P] [US1] Implement trips data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/trips.ts
-- [ ] T033 [P] [US1] Implement moments data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/moments.ts
-- [ ] T034 [P] [US1] Implement media data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/media.ts
-- [ ] T035 [US1] Implement trips endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/route.ts
-- [ ] T036 [US1] Implement trip detail endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/route.ts
-- [ ] T037 [US1] Implement trip restore endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/restore/route.ts
-- [ ] T038 [US1] Implement trip moments endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/moments/route.ts
-- [ ] T039 [US1] Implement moment update/delete endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/moments/[momentId]/route.ts
-- [ ] T040 [US1] Implement media upload URL endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/media/upload-url/route.ts
-- [ ] T041 [US1] Implement media finalize endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/media/complete/route.ts
-- [ ] T042 [US1] Implement dashboard page shell in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/dashboard/page.tsx
-- [ ] T043 [P] [US1] Build globe component (R3F + dynamic import) in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/Globe.tsx
-- [ ] T044 [P] [US1] Build globe pins layer in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/GlobePins.tsx
-- [ ] T045 [P] [US1] Add FPS/perf monitor hook in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/useFpsMonitor.ts
-- [ ] T046 [US1] Implement trips list page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/trips/page.tsx
-- [ ] T047 [US1] Implement trip detail page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/trips/[id]/page.tsx
-- [ ] T048 [P] [US1] Build trip form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/TripForm.tsx
-- [ ] T049 [P] [US1] Build moment form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/MomentForm.tsx
-- [ ] T050 [P] [US1] Build highlights editor in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/HighlightsEditor.tsx
-- [ ] T051 [P] [US1] Build media gallery in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/media/MediaGallery.tsx
-- [ ] T052 [P] [US1] Build media upload UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/media/UploadDropzone.tsx
-- [ ] T053 [P] [US1] Build trip stats cards in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/TripStats.tsx
+- [X] T032 [P] [US1] Implement trips data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/trips.ts
+- [X] T033 [P] [US1] Implement moments data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/moments.ts
+- [X] T034 [P] [US1] Implement media data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/media.ts
+- [X] T035 [US1] Implement trips endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/route.ts
+- [X] T036 [US1] Implement trip detail endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/route.ts
+- [X] T037 [US1] Implement trip restore endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/restore/route.ts
+- [X] T038 [US1] Implement trip moments endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/trips/[tripId]/moments/route.ts
+- [X] T039 [US1] Implement moment update/delete endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/moments/[momentId]/route.ts
+- [X] T040 [US1] Implement media upload URL endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/media/upload-url/route.ts
+- [X] T041 [US1] Implement media finalize endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/media/complete/route.ts
+- [X] T042 [US1] Implement dashboard page shell in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/dashboard/page.tsx
+- [X] T043 [P] [US1] Build globe component (R3F + dynamic import) in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/Globe.tsx
+- [X] T044 [P] [US1] Build globe pins layer in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/GlobePins.tsx
+- [X] T045 [P] [US1] Add FPS/perf monitor hook in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/globe/useFpsMonitor.ts
+- [X] T046 [US1] Implement trips list page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/trips/page.tsx
+- [X] T047 [US1] Implement trip detail page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/trips/[id]/page.tsx
+- [X] T048 [P] [US1] Build trip form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/TripForm.tsx
+- [X] T049 [P] [US1] Build moment form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/MomentForm.tsx
+- [X] T050 [P] [US1] Build highlights editor in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/HighlightsEditor.tsx
+- [X] T051 [P] [US1] Build media gallery in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/media/MediaGallery.tsx
+- [X] T052 [P] [US1] Build media upload UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/media/UploadDropzone.tsx
+- [X] T053 [P] [US1] Build trip stats cards in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/TripStats.tsx
 
 ---
 
