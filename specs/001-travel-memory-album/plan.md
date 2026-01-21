@@ -36,12 +36,12 @@ Post-Design Recheck: PASS (artifacts generated, no new violations introduced).
 
 ```text
 /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/specs/001-travel-memory-album/
-â”śâ”€â”€ plan.md
-â”śâ”€â”€ research.md
-â”śâ”€â”€ data-model.md
-â”śâ”€â”€ quickstart.md
-â”śâ”€â”€ contracts/
-â””â”€â”€ tasks.md
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
 ```
 
 ### Source Code (repository root)
@@ -49,32 +49,32 @@ Post-Design Recheck: PASS (artifacts generated, no new violations introduced).
 ```text
 /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/
 app/
-â”śâ”€â”€ (auth)/
-â”śâ”€â”€ (app)/
-â”śâ”€â”€ s/
-â””â”€â”€ api/
+├── (auth)/
+├── (app)/
+├── s/
+└── api/
 
 components/
-â”śâ”€â”€ ui/
-â””â”€â”€ globe/
+├── ui/
+└── globe/
 
 lib/
-â”śâ”€â”€ ai/
-â”śâ”€â”€ entitlements/
-â”śâ”€â”€ observability/
-â”śâ”€â”€ share/
-â”śâ”€â”€ stripe/
-â””â”€â”€ supabase/
+├── ai/
+├── entitlements/
+├── observability/
+├── share/
+├── stripe/
+└── supabase/
 
 public/
 supabase/
-â”śâ”€â”€ functions/
-â””â”€â”€ migrations/
+├── functions/
+└── migrations/
 
 tests/
-â”śâ”€â”€ unit/
-â”śâ”€â”€ integration/
-â””â”€â”€ e2e/
+├── unit/
+├── integration/
+└── e2e/
 ```
 
 **Structure Decision**: Single Next.js App Router project with route handlers under `app/api` and Supabase Edge Functions in `supabase/functions`. Shared domain logic lives in `lib/`, UI in `components/`, and 3D globe components isolated under `components/globe`.

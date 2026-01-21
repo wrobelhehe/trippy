@@ -8,11 +8,11 @@
 ## Clarifications
 
 ### Session 2026-01-20
-- Q: What should the default lifetime for share links be? â†’ A: 30 days by default; owner can extend/renew or set a shorter expiry.
-- Q: Should guests be able to download media from share links? â†’ A: View-only by default; owner toggle per share link to enable downloads.
-- Q: How should media ownership and reuse work across trips? â†’ A: Media belongs to the owner and can attach to multiple trips and/or moments.
-- Q: What should happen when an owner deletes a trip? â†’ A: Soft delete to Trash for 30 days; owner can restore; share links revoked immediately.
-- Q: How should share link tokens be stored and rotated? â†’ A: Store hashed tokens only; rotate only on explicit owner request.
+- Q: What should the default lifetime for share links be? → A: 30 days by default; owner can extend/renew or set a shorter expiry.
+- Q: Should guests be able to download media from share links? → A: View-only by default; owner toggle per share link to enable downloads.
+- Q: How should media ownership and reuse work across trips? → A: Media belongs to the owner and can attach to multiple trips and/or moments.
+- Q: What should happen when an owner deletes a trip? → A: Soft delete to Trash for 30 days; owner can restore; share links revoked immediately.
+- Q: How should share link tokens be stored and rotated? → A: Store hashed tokens only; rotate only on explicit owner request.
 
 ## User Scenarios & Testing *(mandatory)*
 

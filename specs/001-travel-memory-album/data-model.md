@@ -83,6 +83,6 @@
 
 ## State Transitions
 
-- **ai_jobs.status**: queued â†’ processing â†’ succeeded|failed (retries allowed on failed).
-- **share_links**: active â†’ revoked (revoked_at set) or expired (expires_at reached).
-- **trips**: active â†’ soft-deleted (deleted_at set) â†’ restored (deleted_at cleared).
+- **ai_jobs.status**: queued → processing → succeeded|failed (retries allowed on failed).
+- **share_links**: active → revoked (revoked_at set) or expired (expires_at reached).
+- **trips**: active → soft-deleted (deleted_at set) → restored (deleted_at cleared).
