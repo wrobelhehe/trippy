@@ -56,7 +56,7 @@ describe("Share link flow", () => {
     const createBody = await createResponse.json();
 
     const rotateResponse = await rotateHandler(new Request("http://localhost"), {
-      params: { shareLinkId: "share_flow" },
+      params: Promise.resolve({ shareLinkId: "share_flow" }),
     });
     const rotateBody = await rotateResponse.json();
 

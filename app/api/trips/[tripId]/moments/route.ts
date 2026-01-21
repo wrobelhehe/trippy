@@ -4,10 +4,11 @@ import { createMoment, listMoments } from "@/lib/supabase/moments";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
-    const moments = await listMoments(params.tripId);
+    const { tripId } = await params;
+    const moments = await listMoments(tripId);
     return NextResponse.json(moments);
   } catch (error) {
     return NextResponse.json(
@@ -19,9 +20,10 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
+    const { tripId } = await params;
     const body = await request.json();
 
     if (!body?.contentText) {
@@ -31,12 +33,12 @@ export async function POST(
       );
     }
 
-    const moment = await createMoment(params.tripId, {
+    const moment = await createMoment(tripId, {
       contentText: body.contentText,
-      momentTimestamp: body.momentTimestamp ?? null,
-      orderIndex: body.orderIndex ?? null,
-      lat: body.lat ?? null,
-      lng: body.lng ?? null,
+      momentTimestamp: body.momentTimestamp,
+      orderIndex: body.orderIndex,
+      lat: body.lat,
+      lng: body.lng,
     });
 
     return NextResponse.json(moment, { status: 201 });

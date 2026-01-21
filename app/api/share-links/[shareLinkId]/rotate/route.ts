@@ -4,10 +4,11 @@ import { rotateShareLink } from "@/lib/share/share-links";
 
 export async function POST(
   _request: Request,
-  { params }: { params: { shareLinkId: string } }
+  { params }: { params: Promise<{ shareLinkId: string }> }
 ) {
   try {
-    const result = await rotateShareLink(params.shareLinkId);
+    const { shareLinkId } = await params;
+    const result = await rotateShareLink(shareLinkId);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

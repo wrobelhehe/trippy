@@ -6,11 +6,20 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const redirectTo = searchParams.get("redirectTo");
+  const safeRedirectTo =
+    redirectTo?.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : "/dashboard";
 
   if (code) {
-    const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const supabase = await createClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(
+        `${origin}/sign-in?error=auth_callback_failed`
+      );
+    }
   }
 
-  return NextResponse.redirect(`${origin}${redirectTo ?? "/dashboard"}`);
+  return NextResponse.redirect(`${origin}${safeRedirectTo}`);
 }

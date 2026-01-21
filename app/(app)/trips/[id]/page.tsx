@@ -20,9 +20,10 @@ import { getTrip } from "@/lib/supabase/trips";
 export default async function TripDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const trip = await getTrip(params.id);
+  const { id } = await params;
+  const trip = await getTrip(id);
 
   if (!trip) {
     notFound();
@@ -113,6 +114,7 @@ export default async function TripDetailPage({
                 items={media.map((item) => ({
                   id: item.id,
                   mediaType: item.media_type,
+                  url: item.public_url ?? item.storage_path,
                 }))}
               />
             </CardContent>

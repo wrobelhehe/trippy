@@ -13,18 +13,22 @@ export async function logAuditEvent({
   entityId,
   metadata,
 }: AuditEventInput) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
     return;
   }
 
-  await supabase.from("audit_log").insert({
+  const { error } = await supabase.from("audit_log").insert({
     owner_id: data.user.id,
     event_type: eventType,
     entity_type: entityType ?? null,
     entity_id: entityId ?? null,
     metadata: metadata ?? {},
   });
+
+  if (error) {
+    console.error("[audit] Failed to log event:", eventType, error.message);
+  }
 }

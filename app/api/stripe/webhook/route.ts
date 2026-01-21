@@ -16,7 +16,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.text();
-  const signature = headers().get("stripe-signature");
+  const headersList = await headers();
+  const signature = headersList.get("stripe-signature");
 
   if (!signature) {
     return NextResponse.json(
@@ -60,17 +61,17 @@ export async function POST(request: Request) {
       const subscriptionId = session.subscription;
 
       if (subscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(
-          subscriptionId as string
-        );
-
         if (session.metadata?.userId) {
-          await stripe.subscriptions.update(subscription.id, {
+          await stripe.subscriptions.update(subscriptionId as string, {
             metadata: {
               userId: session.metadata.userId,
             },
           });
         }
+
+        const subscription = await stripe.subscriptions.retrieve(
+          subscriptionId as string
+        );
 
         await upsertSubscriptionFromStripe(subscription);
       }

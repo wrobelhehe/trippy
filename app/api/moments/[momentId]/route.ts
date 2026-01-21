@@ -4,16 +4,17 @@ import { softDeleteMoment, updateMoment } from "@/lib/supabase/moments";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { momentId: string } }
+  { params }: { params: Promise<{ momentId: string }> }
 ) {
   try {
+    const { momentId } = await params;
     const body = await request.json();
-    const moment = await updateMoment(params.momentId, {
+    const moment = await updateMoment(momentId, {
       contentText: body.contentText,
-      momentTimestamp: body.momentTimestamp ?? null,
-      orderIndex: body.orderIndex ?? null,
-      lat: body.lat ?? null,
-      lng: body.lng ?? null,
+      momentTimestamp: body.momentTimestamp,
+      orderIndex: body.orderIndex,
+      lat: body.lat,
+      lng: body.lng,
     });
 
     return NextResponse.json(moment);
@@ -27,11 +28,12 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { momentId: string } }
+  { params }: { params: Promise<{ momentId: string }> }
 ) {
   try {
-    await softDeleteMoment(params.momentId);
-    return NextResponse.json({}, { status: 204 });
+    const { momentId } = await params;
+    await softDeleteMoment(momentId);
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to delete moment" },

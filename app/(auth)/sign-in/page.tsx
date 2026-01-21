@@ -20,13 +20,14 @@ const benefits = [
   "Collect highlights that stay yours.",
 ];
 
-export default function SignInPage({
+export default async function SignInPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; redirectedFrom?: string };
+  searchParams: Promise<{ error?: string; redirectedFrom?: string }>;
 }) {
-  const errorMessage = searchParams?.error
-    ? decodeURIComponent(searchParams.error.replace(/\+/g, " "))
+  const params = await searchParams;
+  const errorMessage = params?.error
+    ? decodeURIComponent(params.error.replace(/\+/g, " "))
     : null;
 
   return (
@@ -85,7 +86,7 @@ export default function SignInPage({
             <input
               type="hidden"
               name="redirectTo"
-              value={searchParams?.redirectedFrom ?? "/dashboard"}
+              value={params?.redirectedFrom ?? "/dashboard"}
             />
             <Button className="w-full" type="submit">
               Sign in

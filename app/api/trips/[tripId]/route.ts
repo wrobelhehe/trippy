@@ -4,10 +4,11 @@ import { getTrip, softDeleteTrip, updateTrip } from "@/lib/supabase/trips";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
-    const trip = await getTrip(params.tripId);
+    const { tripId } = await params;
+    const trip = await getTrip(tripId);
 
     if (!trip) {
       return NextResponse.json({ error: "Trip not found" }, { status: 404 });
@@ -24,17 +25,18 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
+    const { tripId } = await params;
     const body = await request.json();
-    const trip = await updateTrip(params.tripId, {
+    const trip = await updateTrip(tripId, {
       title: body.title,
       placeName: body.placeName,
-      startDate: body.startDate ?? null,
-      endDate: body.endDate ?? null,
-      shortDescription: body.shortDescription ?? null,
-      coverMediaId: body.coverMediaId ?? null,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      shortDescription: body.shortDescription,
+      coverMediaId: body.coverMediaId,
       tags: body.tags,
       privacyMode: body.privacyMode,
       hideExactDates: body.hideExactDates,
@@ -54,11 +56,12 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
-    await softDeleteTrip(params.tripId);
-    return NextResponse.json({}, { status: 204 });
+    const { tripId } = await params;
+    await softDeleteTrip(tripId);
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to delete trip" },

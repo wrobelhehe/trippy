@@ -70,7 +70,7 @@ describe("Trip + moment flow", () => {
         method: "POST",
         body: JSON.stringify({ contentText: "Fjord breeze." }),
       }),
-      { params: { tripId: tripBody.id } }
+      { params: Promise.resolve({ tripId: tripBody.id }) }
     );
 
     const momentBody = await momentResponse.json();

@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestPasswordReset } from "@/lib/supabase/auth";
 
-export default function ForgotPasswordPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const errorMessage = searchParams?.error
-    ? decodeURIComponent(searchParams.error.replace(/\+/g, " "))
+  const params = await searchParams;
+  const errorMessage = params?.error
+    ? decodeURIComponent(params.error.replace(/\+/g, " "))
     : null;
 
   return (

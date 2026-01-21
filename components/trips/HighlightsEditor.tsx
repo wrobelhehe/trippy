@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,19 @@ export function HighlightsEditor({
   value?: string[];
   onChange?: (items: string[]) => void;
 }) {
-  const initial = useMemo(() => {
-    if (value && value.length >= 3) {
-      return value;
+  const getInitialItems = (input?: string[]) => {
+    if (input && input.length >= 3) {
+      return input;
     }
-
     return ["", "", ""];
+  };
+  const [items, setItems] = useState<string[]>(() => getInitialItems(value));
+
+  useEffect(() => {
+    if (value) {
+      setItems(getInitialItems(value));
+    }
   }, [value]);
-  const [items, setItems] = useState<string[]>(initial);
 
   const updateItems = (nextItems: string[]) => {
     setItems(nextItems);
@@ -54,7 +59,7 @@ export function HighlightsEditor({
       </div>
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div key={`${index}-${item}`} className="flex items-center gap-2">
+          <div key={index} className="flex items-center gap-2">
             <Input
               value={item}
               onChange={(event) => updateItem(index, event.target.value)}

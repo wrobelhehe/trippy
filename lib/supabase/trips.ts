@@ -40,7 +40,7 @@ export type CreateTripInput = {
 export type UpdateTripInput = Partial<CreateTripInput>;
 
 async function requireUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -55,10 +55,11 @@ export async function listTrips({
 }: {
   includeDeleted?: boolean;
 } = {}) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   let query = supabase.from("trips").select("*").order("created_at", {
     ascending: false,
   });
+  query = query.eq("owner_id", userId);
 
   if (!includeDeleted) {
     query = query.is("deleted_at", null);
@@ -74,11 +75,12 @@ export async function listTrips({
 }
 
 export async function getTrip(tripId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("trips")
     .select("*")
     .eq("id", tripId)
+    .eq("owner_id", userId)
     .maybeSingle();
 
   if (error) {
@@ -121,26 +123,28 @@ export async function createTrip(input: CreateTripInput) {
 
 export async function updateTrip(tripId: string, input: UpdateTripInput) {
   const { supabase, userId } = await requireUserId();
-  const payload = {
-    owner_id: userId,
-    title: input.title,
-    place_name: input.placeName,
-    start_date: input.startDate ?? null,
-    end_date: input.endDate ?? null,
-    short_description: input.shortDescription ?? null,
-    cover_media_id: input.coverMediaId ?? null,
-    tags: input.tags,
-    privacy_mode: input.privacyMode,
-    hide_exact_dates: input.hideExactDates,
-    country_code: input.countryCode,
-    lat: input.lat,
-    lng: input.lng,
-  };
+  const payload: Record<string, unknown> = {};
+  if (input.title !== undefined) payload.title = input.title;
+  if (input.placeName !== undefined) payload.place_name = input.placeName;
+  if (input.startDate !== undefined) payload.start_date = input.startDate;
+  if (input.endDate !== undefined) payload.end_date = input.endDate;
+  if (input.shortDescription !== undefined)
+    payload.short_description = input.shortDescription;
+  if (input.coverMediaId !== undefined)
+    payload.cover_media_id = input.coverMediaId;
+  if (input.tags !== undefined) payload.tags = input.tags;
+  if (input.privacyMode !== undefined) payload.privacy_mode = input.privacyMode;
+  if (input.hideExactDates !== undefined)
+    payload.hide_exact_dates = input.hideExactDates;
+  if (input.countryCode !== undefined) payload.country_code = input.countryCode;
+  if (input.lat !== undefined) payload.lat = input.lat;
+  if (input.lng !== undefined) payload.lng = input.lng;
 
   const { data, error } = await supabase
     .from("trips")
     .update(payload)
     .eq("id", tripId)
+    .eq("owner_id", userId)
     .select("*")
     .single();
 
@@ -152,11 +156,12 @@ export async function updateTrip(tripId: string, input: UpdateTripInput) {
 }
 
 export async function softDeleteTrip(tripId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("trips")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", tripId);
+    .eq("id", tripId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);
@@ -164,11 +169,12 @@ export async function softDeleteTrip(tripId: string) {
 }
 
 export async function restoreTrip(tripId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("trips")
     .update({ deleted_at: null })
-    .eq("id", tripId);
+    .eq("id", tripId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);

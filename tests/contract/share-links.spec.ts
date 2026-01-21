@@ -49,7 +49,7 @@ describe("Share links API contract", () => {
     revokeShareLinkMock.mockResolvedValueOnce();
 
     const response = await POST(new Request("http://localhost"), {
-      params: { shareLinkId: "share_1" },
+      params: Promise.resolve({ shareLinkId: "share_1" }),
     });
 
     const body = await response.json();
@@ -79,7 +79,7 @@ describe("Share links API contract", () => {
     });
 
     const response = await POST(new Request("http://localhost"), {
-      params: { shareLinkId: "share_2" },
+      params: Promise.resolve({ shareLinkId: "share_2" }),
     });
 
     const body = await response.json();

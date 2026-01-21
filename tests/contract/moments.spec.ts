@@ -28,7 +28,7 @@ describe("Moments API contract", () => {
     ]);
 
     const response = await GET(new Request("http://localhost"), {
-      params: { tripId: "trip_1" },
+      params: Promise.resolve({ tripId: "trip_1" }),
     });
     const body = await response.json();
 
@@ -60,7 +60,9 @@ describe("Moments API contract", () => {
       body: JSON.stringify({ contentText: "Matcha break." }),
     });
 
-    const response = await POST(request, { params: { tripId: "trip_1" } });
+    const response = await POST(request, {
+      params: Promise.resolve({ tripId: "trip_1" }),
+    });
     const body = await response.json();
 
     expect(response.status).toBe(201);
@@ -75,7 +77,9 @@ describe("Moments API contract", () => {
       body: JSON.stringify({}),
     });
 
-    const response = await POST(request, { params: { tripId: "trip_1" } });
+    const response = await POST(request, {
+      params: Promise.resolve({ tripId: "trip_1" }),
+    });
     expect(response.status).toBe(400);
   });
 });

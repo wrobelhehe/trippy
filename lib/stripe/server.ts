@@ -31,9 +31,21 @@ export function getPremiumPriceId() {
   return premiumPriceId;
 }
 
-export function getBaseUrl() {
-  const origin = headers().get("origin");
-  return origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export async function getBaseUrl() {
+  const origin = (await headers()).get("origin");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  if (!origin) {
+    return siteUrl;
+  }
+
+  try {
+    const originUrl = new URL(origin);
+    const siteUrlObj = new URL(siteUrl);
+    return originUrl.host === siteUrlObj.host ? origin : siteUrl;
+  } catch {
+    return siteUrl;
+  }
 }
 
 export async function getOrCreateCustomerId({
@@ -44,11 +56,15 @@ export async function getOrCreateCustomerId({
   email?: string | null;
 }) {
   const supabaseAdmin = createAdminClient();
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .select("stripe_customer_id")
     .eq("owner_id", userId)
     .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   if (data?.stripe_customer_id) {
     return data.stripe_customer_id;
@@ -60,7 +76,7 @@ export async function getOrCreateCustomerId({
     metadata: { userId },
   });
 
-  await supabaseAdmin.from("subscriptions").upsert(
+  const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
     {
       owner_id: userId,
       stripe_customer_id: customer.id,
@@ -68,6 +84,10 @@ export async function getOrCreateCustomerId({
     },
     { onConflict: "owner_id" }
   );
+
+  if (upsertError) {
+    throw new Error(upsertError.message);
+  }
 
   return customer.id;
 }
@@ -95,18 +115,24 @@ export async function upsertSubscriptionFromStripe(
   const ownerId = subscription.metadata?.userId;
 
   if (ownerId) {
-    await supabaseAdmin.from("subscriptions").upsert(
+    const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
       {
         owner_id: ownerId,
         ...payload,
       },
       { onConflict: "owner_id" }
     );
+    if (upsertError) {
+      throw new Error(upsertError.message);
+    }
     return;
   }
 
-  await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from("subscriptions")
     .update(payload)
     .eq("stripe_customer_id", stripeCustomerId);
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
 }

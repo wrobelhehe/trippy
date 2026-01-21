@@ -7,6 +7,7 @@ export type Media = {
   storage_bucket: string;
   storage_path: string;
   thumb_path: string | null;
+  public_url?: string | null;
   width: number | null;
   height: number | null;
   duration_seconds: number | null;
@@ -26,7 +27,7 @@ export type CreateMediaInput = {
 };
 
 async function requireUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -65,6 +66,17 @@ export async function createMedia(input: CreateMediaInput) {
 
 export async function attachMediaToTrip(tripId: string, mediaId: string) {
   const { supabase, userId } = await requireUserId();
+  const { data: trip, error: tripError } = await supabase
+    .from("trips")
+    .select("id")
+    .eq("id", tripId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (tripError || !trip) {
+    throw new Error("Trip not found.");
+  }
+
   const { error } = await supabase.from("trip_media").insert({
     trip_id: tripId,
     media_id: mediaId,
@@ -78,6 +90,17 @@ export async function attachMediaToTrip(tripId: string, mediaId: string) {
 
 export async function attachMediaToMoment(momentId: string, mediaId: string) {
   const { supabase, userId } = await requireUserId();
+  const { data: moment, error: momentError } = await supabase
+    .from("moments")
+    .select("id")
+    .eq("id", momentId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (momentError || !moment) {
+    throw new Error("Moment not found.");
+  }
+
   const { error } = await supabase.from("moment_media").insert({
     moment_id: momentId,
     media_id: mediaId,
@@ -90,29 +113,49 @@ export async function attachMediaToMoment(momentId: string, mediaId: string) {
 }
 
 export async function listTripMedia(tripId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("trip_media")
     .select("media:media_id (*)")
-    .eq("trip_id", tripId);
+    .eq("trip_id", tripId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((item) => item.media) as Media[];
+  return (data ?? []).map((item) => {
+    const media = item.media as Media;
+    const { data: publicUrl } = supabase.storage
+      .from(media.storage_bucket)
+      .getPublicUrl(media.storage_path);
+    return {
+      ...media,
+      public_url: publicUrl.publicUrl ?? null,
+    };
+  });
 }
 
 export async function listMomentMedia(momentId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("moment_media")
     .select("media:media_id (*)")
-    .eq("moment_id", momentId);
+    .eq("moment_id", momentId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((item) => item.media) as Media[];
+  return (data ?? []).map((item) => {
+    const media = item.media as Media;
+    const { data: publicUrl } = supabase.storage
+      .from(media.storage_bucket)
+      .getPublicUrl(media.storage_path);
+    return {
+      ...media,
+      public_url: publicUrl.publicUrl ?? null,
+    };
+  });
 }

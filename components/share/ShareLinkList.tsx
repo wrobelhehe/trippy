@@ -68,7 +68,7 @@ export function ShareLinkList({
           <div>
             <p className="font-medium capitalize">{link.scope} share</p>
             <p className="text-xs text-muted-foreground">
-              Created {new Date(link.created_at).toLocaleDateString()} ·{" "}
+              Created {new Date(link.created_at).toLocaleDateString()} â€¢{" "}
               {link.revoked_at ? "Revoked" : "Active"}
             </p>
           </div>

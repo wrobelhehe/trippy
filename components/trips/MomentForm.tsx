@@ -22,7 +22,8 @@ export function MomentForm({
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload = {
       contentText: formData.get("contentText"),
       momentTimestamp: formData.get("momentTimestamp") || null,
@@ -40,7 +41,7 @@ export function MomentForm({
         throw new Error(data?.error ?? "Unable to add moment.");
       }
 
-      event.currentTarget.reset();
+      form.reset();
       onCreated?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to add moment.");

@@ -10,7 +10,7 @@ import {
 } from "@/lib/stripe/server";
 
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -22,14 +22,15 @@ export async function POST() {
     userId: data.user.id,
     email: data.user.email,
   });
+  const baseUrl = await getBaseUrl();
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: getPremiumPriceId(), quantity: 1 }],
     allow_promotion_codes: true,
-    success_url: `${getBaseUrl()}/billing?checkout=success`,
-    cancel_url: `${getBaseUrl()}/billing?checkout=cancel`,
+    success_url: `${baseUrl}/billing?checkout=success`,
+    cancel_url: `${baseUrl}/billing?checkout=cancel`,
     metadata: {
       userId: data.user.id,
     },

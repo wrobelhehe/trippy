@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl, getStripeClient } from "@/lib/stripe/server";
 
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -25,10 +25,19 @@ export async function POST() {
   }
 
   const stripe = getStripeClient();
-  const session = await stripe.billingPortal.sessions.create({
-    customer: subscription.stripe_customer_id,
-    return_url: `${getBaseUrl()}/billing`,
-  });
+  const baseUrl = await getBaseUrl();
 
-  return NextResponse.json({ url: session.url });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: `${baseUrl}/billing`,
+    });
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    console.error("Stripe portal session error:", error);
+    return NextResponse.json(
+      { error: "Unable to create billing portal session." },
+      { status: 500 }
+    );
+  }
 }

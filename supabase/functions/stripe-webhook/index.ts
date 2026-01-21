@@ -101,12 +101,12 @@ Deno.serve(async (req) => {
       const subscriptionId = session.subscription;
 
       if (subscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(
+        let subscription = await stripe.subscriptions.retrieve(
           subscriptionId as string
         );
 
         if (session.metadata?.userId) {
-          await stripe.subscriptions.update(subscription.id, {
+          subscription = await stripe.subscriptions.update(subscription.id, {
             metadata: {
               userId: session.metadata.userId,
             },

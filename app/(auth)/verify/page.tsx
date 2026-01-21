@@ -18,16 +18,17 @@ const statusCopy: Record<string, string> = {
   "recovery-sent": "We sent a recovery link. You can also paste the code here.",
 };
 
-export default function VerifyPage({
+export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; status?: string; email?: string };
+  searchParams: Promise<{ error?: string; status?: string; email?: string }>;
 }) {
-  const errorMessage = searchParams?.error
-    ? decodeURIComponent(searchParams.error.replace(/\+/g, " "))
+  const params = await searchParams;
+  const errorMessage = params?.error
+    ? decodeURIComponent(params.error.replace(/\+/g, " "))
     : null;
-  const statusMessage = searchParams?.status
-    ? statusCopy[searchParams.status] ?? "Enter the code from your email."
+  const statusMessage = params?.status
+    ? statusCopy[params.status] ?? "Enter the code from your email."
     : "Enter the code from your email.";
 
   return (
@@ -50,7 +51,7 @@ export default function VerifyPage({
               name="email"
               type="email"
               autoComplete="email"
-              defaultValue={searchParams?.email ?? ""}
+              defaultValue={params?.email ?? ""}
               required
             />
           </div>

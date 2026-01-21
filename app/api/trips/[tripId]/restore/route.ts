@@ -4,10 +4,11 @@ import { restoreTrip } from "@/lib/supabase/trips";
 
 export async function POST(
   _request: Request,
-  { params }: { params: { tripId: string } }
+  { params }: { params: Promise<{ tripId: string }> }
 ) {
   try {
-    await restoreTrip(params.tripId);
+    const { tripId } = await params;
+    await restoreTrip(tripId);
     return NextResponse.json({ restored: true });
   } catch (error) {
     return NextResponse.json(

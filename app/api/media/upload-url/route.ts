@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
 
     if (!data.user) {
@@ -22,8 +22,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const extension = fileName.split(".").pop() ?? "";
-    const path = `${data.user.id}/${crypto.randomUUID()}.${extension}`;
+    const lastDotIndex = fileName.lastIndexOf(".");
+    const extension = lastDotIndex > 0 ? fileName.slice(lastDotIndex + 1) : "";
+    const path = extension
+      ? `${data.user.id}/${crypto.randomUUID()}.${extension}`
+      : `${data.user.id}/${crypto.randomUUID()}`;
 
     const { data: signed, error } = await supabase.storage
       .from("user-media")

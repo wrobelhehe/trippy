@@ -10,7 +10,7 @@ export type Entitlements = {
 const premiumStatuses = new Set(["active", "trialing"]);
 
 export async function getEntitlements(): Promise<Entitlements> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
 
   if (!auth.user) {

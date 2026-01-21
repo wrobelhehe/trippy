@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updatePassword } from "@/lib/supabase/auth";
 
-export default function ResetPasswordPage({
+export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const errorMessage = searchParams?.error
-    ? decodeURIComponent(searchParams.error.replace(/\+/g, " "))
+  const params = await searchParams;
+  const errorMessage = params?.error
+    ? decodeURIComponent(params.error.replace(/\+/g, " "))
     : null;
 
   return (

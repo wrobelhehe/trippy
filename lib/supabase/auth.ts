@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 
 const DEFAULT_REDIRECT = "/dashboard";
 
-function getOrigin() {
-  return headers().get("origin") ?? "http://localhost:3000";
+async function getOrigin() {
+  const headerList = await headers();
+  return headerList.get("origin") ?? "http://localhost:3000";
 }
 
 export async function signInWithEmail(formData: FormData) {
@@ -15,26 +16,30 @@ export async function signInWithEmail(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? DEFAULT_REDIRECT);
+  const safeRedirectTo =
+    redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : DEFAULT_REDIRECT;
 
   if (!email || !password) {
     redirect("/sign-in?error=Missing+email+or+password");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     redirect(`/sign-in?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect(redirectTo);
+  redirect(safeRedirectTo);
 }
 
 export async function signInWithGoogle() {
   "use server";
 
-  const supabase = createClient();
-  const origin = getOrigin();
+  const supabase = await createClient();
+  const origin = await getOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -59,13 +64,13 @@ export async function signUpWithEmail(formData: FormData) {
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const origin = getOrigin();
+  const origin = await getOrigin();
 
   if (!email || !password) {
     redirect("/sign-up?error=Missing+email+or+password");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -92,7 +97,7 @@ export async function verifyOtp(formData: FormData) {
     redirect("/verify?error=Missing+verification+details");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({
     email,
     token,
@@ -110,13 +115,13 @@ export async function requestPasswordReset(formData: FormData) {
   "use server";
 
   const email = String(formData.get("email") ?? "").trim();
-  const origin = getOrigin();
+  const origin = await getOrigin();
 
   if (!email) {
     redirect("/forgot-password?error=Email+is+required");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback`,
   });
@@ -137,7 +142,7 @@ export async function updatePassword(formData: FormData) {
     redirect("/reset-password?error=Password+is+required");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
@@ -150,7 +155,7 @@ export async function updatePassword(formData: FormData) {
 export async function signOut() {
   "use server";
 
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/sign-in");
 }

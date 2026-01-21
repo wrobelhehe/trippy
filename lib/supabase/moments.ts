@@ -25,7 +25,7 @@ export type CreateMomentInput = {
 export type UpdateMomentInput = Partial<CreateMomentInput>;
 
 async function requireUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -36,11 +36,12 @@ async function requireUserId() {
 }
 
 export async function listMoments(tripId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("moments")
     .select("*")
     .eq("trip_id", tripId)
+    .eq("owner_id", userId)
     .is("deleted_at", null)
     .order("moment_timestamp", { ascending: true })
     .order("order_index", { ascending: true });
@@ -78,19 +79,20 @@ export async function createMoment(tripId: string, input: CreateMomentInput) {
 }
 
 export async function updateMoment(momentId: string, input: UpdateMomentInput) {
-  const { supabase } = await requireUserId();
-  const payload = {
-    content_text: input.contentText,
-    moment_timestamp: input.momentTimestamp ?? null,
-    order_index: input.orderIndex ?? null,
-    lat: input.lat ?? null,
-    lng: input.lng ?? null,
-  };
+  const { supabase, userId } = await requireUserId();
+  const payload: Record<string, unknown> = {};
+  if (input.contentText !== undefined) payload.content_text = input.contentText;
+  if (input.momentTimestamp !== undefined)
+    payload.moment_timestamp = input.momentTimestamp;
+  if (input.orderIndex !== undefined) payload.order_index = input.orderIndex;
+  if (input.lat !== undefined) payload.lat = input.lat;
+  if (input.lng !== undefined) payload.lng = input.lng;
 
   const { data, error } = await supabase
     .from("moments")
     .update(payload)
     .eq("id", momentId)
+    .eq("owner_id", userId)
     .select("*")
     .single();
 
@@ -102,11 +104,12 @@ export async function updateMoment(momentId: string, input: UpdateMomentInput) {
 }
 
 export async function softDeleteMoment(momentId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("moments")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", momentId);
+    .eq("id", momentId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);

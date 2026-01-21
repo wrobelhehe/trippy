@@ -8,7 +8,6 @@ import { signOut } from "@/lib/supabase/auth";
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/trips", label: "Trips" },
-  { href: "/share-studio", label: "Share Studio" },
   { href: "/settings", label: "Settings" },
   { href: "/billing", label: "Billing" },
 ];
@@ -18,7 +17,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   return (

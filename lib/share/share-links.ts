@@ -21,7 +21,7 @@ export type CreateShareLinkInput = {
 };
 
 async function requireUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
@@ -38,10 +38,11 @@ export async function listShareLinks({
   tripId?: string;
   scope?: "trip" | "profile";
 } = {}) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   let query = supabase.from("share_links").select("*").order("created_at", {
     ascending: false,
   });
+  query = query.eq("owner_id", userId);
 
   if (tripId) {
     query = query.eq("trip_id", tripId);
@@ -62,6 +63,12 @@ export async function listShareLinks({
 
 export async function createShareLink(input: CreateShareLinkInput) {
   const { supabase, userId } = await requireUserId();
+  if (input.scope === "trip" && !input.tripId) {
+    throw new Error("tripId is required for trip share links.");
+  }
+  const defaultExpiry = new Date(
+    Date.now() + 30 * 24 * 60 * 60 * 1000
+  ).toISOString();
   const token = generateShareToken();
   const tokenHash = hashShareToken(token);
 
@@ -71,7 +78,7 @@ export async function createShareLink(input: CreateShareLinkInput) {
     trip_id: input.tripId ?? null,
     token_hash: tokenHash,
     privacy_overrides: input.privacyOverrides ?? {},
-    expires_at: input.expiresAt ?? null,
+    expires_at: input.expiresAt ?? defaultExpiry,
   };
 
   const { data, error } = await supabase
@@ -88,11 +95,12 @@ export async function createShareLink(input: CreateShareLinkInput) {
 }
 
 export async function revokeShareLink(shareLinkId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("share_links")
     .update({ revoked_at: new Date().toISOString() })
-    .eq("id", shareLinkId);
+    .eq("id", shareLinkId)
+    .eq("owner_id", userId);
 
   if (error) {
     throw new Error(error.message);
@@ -100,7 +108,7 @@ export async function revokeShareLink(shareLinkId: string) {
 }
 
 export async function rotateShareLink(shareLinkId: string) {
-  const { supabase } = await requireUserId();
+  const { supabase, userId } = await requireUserId();
   const token = generateShareToken();
   const tokenHash = hashShareToken(token);
 
@@ -108,6 +116,7 @@ export async function rotateShareLink(shareLinkId: string) {
     .from("share_links")
     .update({ token_hash: tokenHash, revoked_at: null })
     .eq("id", shareLinkId)
+    .eq("owner_id", userId)
     .select("*")
     .single();
 
