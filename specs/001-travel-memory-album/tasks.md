@@ -33,28 +33,28 @@
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
-- [ ] T006 [P] Implement browser Supabase client in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/client.ts
-- [ ] T007 [P] Implement server Supabase client in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/server.ts
-- [ ] T008 [P] Implement Supabase middleware helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/middleware.ts
-- [ ] T009 Implement auth gating in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/middleware.ts
-- [ ] T010 [P] Implement auth actions in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/auth.ts
-- [ ] T011 Implement sign-in UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/sign-in/page.tsx
-- [ ] T012 Implement sign-up UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/sign-up/page.tsx
-- [ ] T013 Implement verify UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/verify/page.tsx
-- [ ] T014 Implement forgot-password UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/forgot-password/page.tsx
-- [ ] T015 Implement reset-password UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/reset-password/page.tsx
-- [ ] T016 Implement authenticated app shell layout in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/layout.tsx
-- [ ] T017 [P] Create core schema migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/001_init.sql
-- [ ] T018 [P] Create RLS policies migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/002_rls.sql
-- [ ] T019 [P] Create storage policies migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/003_storage.sql
-- [ ] T020 [P] Implement entitlements helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/entitlements/entitlements.ts
-- [ ] T021 [P] Implement audit logging helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/observability/audit.ts
-- [ ] T022 [P] Implement Stripe server helpers in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/stripe/server.ts
-- [ ] T023 Implement Stripe Checkout endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/checkout/route.ts
-- [ ] T024 Implement Stripe portal endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/portal/route.ts
-- [ ] T025 Implement Stripe webhook endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/webhook/route.ts
-- [ ] T026 Implement Stripe webhook Edge Function in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/functions/stripe-webhook/index.ts
-- [ ] T027 Implement billing page UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/billing/page.tsx
+- [X] T006 [P] Implement browser Supabase client in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/client.ts
+- [X] T007 [P] Implement server Supabase client in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/server.ts
+- [X] T008 [P] Implement Supabase middleware helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/middleware.ts
+- [X] T009 Implement auth gating in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/middleware.ts
+- [X] T010 [P] Implement auth actions in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/supabase/auth.ts
+- [X] T011 Implement sign-in UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/sign-in/page.tsx
+- [X] T012 Implement sign-up UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/sign-up/page.tsx
+- [X] T013 Implement verify UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/verify/page.tsx
+- [X] T014 Implement forgot-password UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/forgot-password/page.tsx
+- [X] T015 Implement reset-password UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(auth)/reset-password/page.tsx
+- [X] T016 Implement authenticated app shell layout in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/layout.tsx
+- [X] T017 [P] Create core schema migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/001_init.sql
+- [X] T018 [P] Create RLS policies migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/002_rls.sql
+- [X] T019 [P] Create storage policies migration in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/migrations/003_storage.sql
+- [X] T020 [P] Implement entitlements helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/entitlements/entitlements.ts
+- [X] T021 [P] Implement audit logging helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/observability/audit.ts
+- [X] T022 [P] Implement Stripe server helpers in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/stripe/server.ts
+- [X] T023 Implement Stripe Checkout endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/checkout/route.ts
+- [X] T024 Implement Stripe portal endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/portal/route.ts
+- [X] T025 Implement Stripe webhook endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/stripe/webhook/route.ts
+- [X] T026 Implement Stripe webhook Edge Function in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/functions/stripe-webhook/index.ts
+- [X] T027 Implement billing page UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/billing/page.tsx
 
 ---
 
