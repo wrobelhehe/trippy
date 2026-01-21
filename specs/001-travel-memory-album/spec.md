@@ -5,6 +5,15 @@
 **Status**: Draft  
 **Input**: User description: "Build a production-grade web application that functions as a Travel Album + Travel Diary (memories-first), explicitly NOT a trip planner. The product helps users capture and revisit past travel memories (photos, videos, diary moments, and highlights) and share them in a premium, privacy-first way via read-only links and one-click sharing assets (IG Story + embeddable widgets). The experience must feel premium (glass design, performance, fast media browsing). It is a memory album/diary for past trips only, with no planning, booking, schedules, or future trip language. Core objects include Profile, Trip, Moment, Media, Highlights, Share Links, and AI Jobs. Key modules: auth, globe dashboard, trips, sharing, share studio, subscriptions, and premium AI features." 
 
+## Clarifications
+
+### Session 2026-01-20
+- Q: What should the default lifetime for share links be? → A: 30 days by default; owner can extend/renew or set a shorter expiry.
+- Q: Should guests be able to download media from share links? → A: View-only by default; owner toggle per share link to enable downloads.
+- Q: How should media ownership and reuse work across trips? → A: Media belongs to the owner and can attach to multiple trips and/or moments.
+- Q: What should happen when an owner deletes a trip? → A: Soft delete to Trash for 30 days; owner can restore; share links revoked immediately.
+- Q: How should share link tokens be stored and rotated? → A: Store hashed tokens only; rotate only on explicit owner request.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Capture a past trip memory (Priority: P1)
@@ -104,13 +113,16 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **FR-005**: Dashboard MUST show stats for total trips, unique countries, total moments, and newest trip.
 - **FR-006**: Navigation MUST include Dashboard, Trips, Share Studio, Settings, Billing/Premium, plus a user menu for profile, billing, and logout.
 - **FR-007**: Users MUST be able to create trips with title, place, optional dates, cover, tags, and a privacy setting.
-- **FR-008**: Users MUST be able to edit trip metadata and highlights (3-7 items), and delete trips with explicit confirmation; deleted trips are removed from owner and shared views.
+- **FR-008**: Users MUST be able to edit trip metadata and highlights (3-7 items), and delete trips with explicit confirmation; deleted trips are soft-deleted to Trash for 30 days, share links revoked immediately, and owners can restore during the retention window.
 - **FR-009**: Users MUST be able to add, edit, and delete moments with text, optional media, optional location, and timestamp or manual order.
-- **FR-010**: Media MUST be stored once and attachable to trips and moments, with thumbnails and basic metadata.
+- **FR-010**: Media MUST be owner-scoped, stored once, and attachable to multiple trips and moments, with thumbnails and basic metadata.
 - **FR-011**: Media browsing MUST be thumbnail-first with on-demand full viewing for photos and videos.
 - **FR-012**: Optional mini-map or mini-globe MAY display moment locations as memory context only, without any planning features.
 - **FR-013**: Users MUST be able to create share links for trip or profile, each with its own privacy redactions, and revoke or rotate tokens.
+- **FR-013b**: Share link tokens MUST be stored as hashes only; rotation occurs only on explicit owner request.
+- **FR-013a**: Share links MUST default to a 30-day expiration; owners can extend/renew or set a shorter expiry at creation.
 - **FR-014**: Share pages MUST be read-only, require no login, and expose only the data allowed by link scope and redaction settings.
+- **FR-014a**: Share links MUST default to view-only media; owners can enable downloads per link.
 - **FR-015**: Privacy redactions MUST support hiding exact dates (month/year or hidden), hiding sensitive ticket details, and hiding internal metadata and costs.
 - **FR-016**: Public share routes MUST be `/s/trip/[token]` and `/s/profile/[token]` and return safe error states for invalid or revoked tokens.
 - **FR-017**: Share Studio MUST generate IG Story (9:16), square post (1:1), and embeddable widget assets for trips or profiles; assets are saved and reusable.
@@ -142,7 +154,7 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **Profile**: Owner identity, display name, avatar, bio, share settings, and public presentation.
 - **Trip**: Past trip with title, place, optional dates, cover, tags, privacy, highlights, moments, and media references.
 - **Moment**: Diary entry within a trip, with text, timestamp or order, optional location, and attached media.
-- **Media**: Photo or video with thumbnails, metadata, owner, and references to trips or moments.
+- **Media**: Owner-scoped photo or video with thumbnails, metadata, and references to one or more trips or moments.
 - **Highlight**: Short curated bullet for a trip, including optional route-style highlight from ticket import.
 - **ShareLink**: Tokenized link with scope (trip or profile), redaction settings, status, and rotation history.
 - **ShareAsset**: Generated asset (story, post, widget) tied to a trip or profile, with template and watermark rules.

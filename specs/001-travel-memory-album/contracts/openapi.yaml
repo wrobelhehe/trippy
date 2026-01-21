@@ -1,0 +1,395 @@
+openapi: 3.0.3
+info:
+  title: Trippy Travel Memory Album API
+  version: 0.1.0
+servers:
+  - url: https://{host}
+    variables:
+      host:
+        default: app.trippy.example
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Trip:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        placeName: { type: string }
+        countryCode: { type: string, nullable: true }
+        lat: { type: number, nullable: true }
+        lng: { type: number, nullable: true }
+        startDate: { type: string, format: date, nullable: true }
+        endDate: { type: string, format: date, nullable: true }
+        shortDescription: { type: string, nullable: true }
+        coverMediaId: { type: string, format: uuid, nullable: true }
+        tags: { type: array, items: { type: string } }
+        privacyMode: { type: string, enum: [private, link, public] }
+        hideExactDates: { type: boolean }
+        momentsCount: { type: integer }
+        mediaCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Moment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tripId: { type: string, format: uuid }
+        contentText: { type: string }
+        momentTimestamp: { type: string, format: date-time, nullable: true }
+        orderIndex: { type: integer }
+        lat: { type: number, nullable: true }
+        lng: { type: number, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Media:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        mediaType: { type: string, enum: [image, video] }
+        width: { type: integer }
+        height: { type: integer }
+        durationSeconds: { type: number, nullable: true }
+        sizeBytes: { type: integer }
+        createdAt: { type: string, format: date-time }
+    ShareLink:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        scope: { type: string, enum: [trip, profile] }
+        tripId: { type: string, format: uuid, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        privacyOverrides: { type: object }
+    ShareAsset:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        scope: { type: string, enum: [trip, profile] }
+        tripId: { type: string, format: uuid, nullable: true }
+        assetType: { type: string, enum: [story, square, widget] }
+        templateKey: { type: string }
+        url: { type: string }
+        createdAt: { type: string, format: date-time }
+    AIJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        jobType: { type: string, enum: [trip_from_photos, ticket_import] }
+        status: { type: string, enum: [queued, processing, succeeded, failed] }
+        input: { type: object }
+        output: { type: object, nullable: true }
+        error: { type: object, nullable: true }
+        costUsd: { type: number, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Entitlement:
+      type: object
+      properties:
+        isPremium: { type: boolean }
+        planKey: { type: string }
+        currentPeriodEnd: { type: string, format: date-time, nullable: true }
+
+paths:
+  /api/trips:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List trips for owner
+      responses:
+        "200":
+          description: OK
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                placeName: { type: string }
+                startDate: { type: string, format: date, nullable: true }
+                endDate: { type: string, format: date, nullable: true }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Trip" }
+
+  /api/trips/{tripId}:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: Get trip details
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Trip" }
+    patch:
+      security: [{ bearerAuth: [] }]
+      summary: Update trip metadata/highlights
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+    delete:
+      security: [{ bearerAuth: [] }]
+      summary: Soft delete trip (30-day trash)
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /api/trips/{tripId}/restore:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Restore a soft-deleted trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+
+  /api/trips/{tripId}/moments:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List moments for trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Moment" }
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create moment
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Created
+
+  /api/moments/{momentId}:
+    patch:
+      security: [{ bearerAuth: [] }]
+      summary: Update moment
+      parameters:
+        - name: momentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+    delete:
+      security: [{ bearerAuth: [] }]
+      summary: Soft delete moment
+      parameters:
+        - name: momentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Deleted
+
+  /api/media/upload-url:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create signed upload URL
+      responses:
+        "200":
+          description: OK
+
+  /api/media/complete:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Finalize media metadata and attach to trip/moment
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Media" }
+
+  /api/share-links:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create share link (token returned once)
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shareLink: { $ref: "#/components/schemas/ShareLink" }
+                  token: { type: string }
+
+  /api/share-links/{shareLinkId}/revoke:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Revoke share link
+      parameters:
+        - name: shareLinkId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+
+  /api/share-links/{shareLinkId}/rotate:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Rotate share link token
+      parameters:
+        - name: shareLinkId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+
+  /api/share/{token}:
+    get:
+      summary: Fetch sanitized share payload
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+
+  /api/share-assets:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List generated share assets
+      responses:
+        "200":
+          description: OK
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Generate share asset
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShareAsset" }
+
+  /api/ai-jobs:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List AI jobs
+      responses:
+        "200":
+          description: OK
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create AI job
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AIJob" }
+
+  /api/ai-jobs/{jobId}:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: Get AI job status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+
+  /api/ai-jobs/{jobId}/retry:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Retry a failed AI job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+
+  /api/entitlements:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: Get current entitlement
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Entitlement" }
+
+  /api/stripe/checkout:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create Stripe Checkout Session
+      responses:
+        "200":
+          description: OK
+
+  /api/stripe/portal:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create Stripe Billing Portal Session
+      responses:
+        "200":
+          description: OK
+
+  /api/stripe/webhook:
+    post:
+      summary: Stripe webhook receiver
+      responses:
+        "200":
+          description: OK
