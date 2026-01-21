@@ -12,6 +12,7 @@ import { MomentForm } from "@/components/trips/MomentForm";
 import { HighlightsEditor } from "@/components/trips/HighlightsEditor";
 import { MediaGallery } from "@/components/media/MediaGallery";
 import { UploadDropzone } from "@/components/media/UploadDropzone";
+import { SharePanel } from "@/components/trips/SharePanel";
 import { listMoments } from "@/lib/supabase/moments";
 import { listTripMedia } from "@/lib/supabase/media";
 import { getTrip } from "@/lib/supabase/trips";
@@ -116,6 +117,8 @@ export default async function TripDetailPage({
               />
             </CardContent>
           </Card>
+
+          <SharePanel tripId={trip.id} />
         </div>
       </div>
     </div>

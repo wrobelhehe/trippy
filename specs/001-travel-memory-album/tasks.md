@@ -106,21 +106,21 @@
 
 ### Tests for User Story 2 (REQUIRED)
 
-- [ ] T054 [P] [US2] Contract tests for share link endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/share-links.spec.ts
-- [ ] T055 [P] [US2] Integration test for share link creation/redactions in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/share-links.spec.ts
-- [ ] T056 [P] [US2] E2E test for share link management in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/share-links.spec.ts
+- [X] T054 [P] [US2] Contract tests for share link endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/share-links.spec.ts
+- [X] T055 [P] [US2] Integration test for share link creation/redactions in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/share-links.spec.ts
+- [X] T056 [P] [US2] E2E test for share link management in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/share-links.spec.ts
 
 ### Implementation for User Story 2
 
-- [ ] T057 [P] [US2] Implement token hashing utilities in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/tokens.ts
-- [ ] T058 [P] [US2] Implement share link data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/share-links.ts
-- [ ] T059 [US2] Implement share link create endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/route.ts
-- [ ] T060 [US2] Implement share link revoke endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/[shareLinkId]/revoke/route.ts
-- [ ] T061 [US2] Implement share link rotate endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/[shareLinkId]/rotate/route.ts
-- [ ] T062 [P] [US2] Build trip share panel in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/SharePanel.tsx
-- [ ] T063 [US2] Build profile share settings page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/settings/page.tsx
-- [ ] T064 [P] [US2] Build share link list component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareLinkList.tsx
-- [ ] T065 [P] [US2] Build share link form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareLinkForm.tsx
+- [X] T057 [P] [US2] Implement token hashing utilities in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/tokens.ts
+- [X] T058 [P] [US2] Implement share link data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/share-links.ts
+- [X] T059 [US2] Implement share link create endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/route.ts
+- [X] T060 [US2] Implement share link revoke endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/[shareLinkId]/revoke/route.ts
+- [X] T061 [US2] Implement share link rotate endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-links/[shareLinkId]/rotate/route.ts
+- [X] T062 [P] [US2] Build trip share panel in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/trips/SharePanel.tsx
+- [X] T063 [US2] Build profile share settings page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/settings/page.tsx
+- [X] T064 [P] [US2] Build share link list component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareLinkList.tsx
+- [X] T065 [P] [US2] Build share link form component in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareLinkForm.tsx
 
 ---
 
