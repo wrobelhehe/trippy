@@ -32,6 +32,8 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
+import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import {
   Sheet,
   SheetContent,
@@ -113,6 +115,42 @@ function DashboardTile({
         element,
         canDrag: () => editMode,
         getInitialData: () => ({ id: item.id }),
+        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
+          if (!nativeSetDragImage) return;
+          const rect = element.getBoundingClientRect();
+          const clone = element.cloneNode(true) as HTMLElement;
+          const computed = window.getComputedStyle(element);
+
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.margin = "0";
+          clone.style.pointerEvents = "none";
+          clone.style.transform = "translateZ(0) scale(0.98)";
+          clone.style.opacity = "0.95";
+          clone.style.borderRadius = computed.borderRadius || "24px";
+          clone.style.boxShadow =
+            "0 35px 90px -55px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08)";
+          clone.style.filter = "saturate(1.02)";
+          clone.querySelector("[data-drag-hint]")?.remove();
+
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: preserveOffsetOnSource({
+              element,
+              input: location.initial.input,
+            }),
+            render: ({ container }) => {
+              container.style.width = `${rect.width}px`;
+              container.style.height = `${rect.height}px`;
+              container.style.pointerEvents = "none";
+              container.style.transform = "translateZ(0)";
+              container.appendChild(clone);
+              return () => {
+                clone.remove();
+              };
+            },
+          });
+        },
         onDragStart: () => onDragStart(item.id),
         onDrop: () => onDragClear(),
       }),
@@ -184,7 +222,10 @@ function DashboardTile({
         </div>
       ) : null}
       {editMode ? (
-        <div className="pointer-events-none absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-900 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.6)] ring-1 ring-black/10 backdrop-blur">
+        <div
+          data-drag-hint
+          className="pointer-events-none absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-900 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.6)] ring-1 ring-black/10 backdrop-blur"
+        >
           <GripVertical className="size-4 text-slate-900/70" />
           <span className="hidden sm:inline">Drag to move</span>
         </div>
