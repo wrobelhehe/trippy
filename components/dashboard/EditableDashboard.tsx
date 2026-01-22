@@ -32,13 +32,6 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
-import {
-  attachClosestEdge,
-  extractClosestEdge,
-} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import type { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/types";
-import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
@@ -85,6 +78,8 @@ const getInstanceId = (data: Record<string, unknown>) => {
   return typeof instanceId === "symbol" ? instanceId : null;
 };
 
+type Edge = "top" | "bottom";
+
 const getVisibleOrder = (layout: DashboardLayoutItem[]) =>
   layout
     .filter((item) => item.visible)
@@ -96,6 +91,20 @@ type DropIndicator = {
   edge: Edge | null;
 };
 
+const getClosestEdge = (element: Element, clientY: number): Edge => {
+  const rect = element.getBoundingClientRect();
+  const midpoint = rect.top + rect.height / 2;
+  return clientY < midpoint ? "top" : "bottom";
+};
+
+const getReorderIndex = (startIndex: number, targetIndex: number, edge: Edge) => {
+  let finishIndex = edge === "bottom" ? targetIndex + 1 : targetIndex;
+  if (startIndex < finishIndex) {
+    finishIndex -= 1;
+  }
+  return finishIndex;
+};
+
 type DashboardTileProps = {
   item: DashboardLayoutItem;
   node: ReactNode;
@@ -105,9 +114,9 @@ type DashboardTileProps = {
   dropEdge: Edge | null;
   isDragging: boolean;
   showDropHint: boolean;
+  isFlash: boolean;
   onDragStart: (id: DashboardWidgetId) => void;
   onDragClear: () => void;
-  onRegister: (id: DashboardWidgetId, element: HTMLElement | null) => void;
 };
 
 function DashboardTile({
@@ -119,9 +128,9 @@ function DashboardTile({
   dropEdge,
   isDragging,
   showDropHint,
+  isFlash,
   onDragStart,
   onDragClear,
-  onRegister,
 }: DashboardTileProps) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -130,7 +139,6 @@ function DashboardTile({
     const element = ref.current;
     if (!element) return;
 
-    onRegister(item.id, element);
     const cleanup = combine(
       draggable({
         element,
@@ -179,22 +187,13 @@ function DashboardTile({
         element,
         canDrop: ({ source }) =>
           editMode && getInstanceId(source.data) === instanceId,
-        getData: ({ input, element }) =>
-          attachClosestEdge(
-            { id: item.id, instanceId },
-            {
-              input,
-              element,
-              allowedEdges: ["top", "bottom"],
-            }
-          ),
+        getData: () => ({ id: item.id, instanceId }),
       })
     );
     return () => {
       cleanup();
-      onRegister(item.id, null);
     };
-  }, [editMode, instanceId, item.id, onDragClear, onDragStart, onRegister]);
+  }, [editMode, instanceId, item.id, onDragClear, onDragStart]);
 
   return (
     <div
@@ -208,6 +207,9 @@ function DashboardTile({
         editMode &&
           isDragging &&
           "opacity-80 scale-[0.98] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.7)]",
+        editMode &&
+          isFlash &&
+          "outline-2 outline-emerald-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.4),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
         editMode && "cursor-grab select-none active:cursor-grabbing transform-gpu will-change-transform"
       )}
       style={
@@ -261,18 +263,22 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
   const [editMode, setEditMode] = useState(false);
   const [draggingId, setDraggingId] = useState<DashboardWidgetId | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
+  const [flashId, setFlashId] = useState<DashboardWidgetId | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
+  const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropIndicatorRaf = useRef<number | null>(null);
   const layoutRef = useRef<DashboardLayoutItem[]>([]);
-  const tileRegistry = useRef(new Map<DashboardWidgetId, HTMLElement>());
   const [instanceId] = useState(() => Symbol("dashboard-instance"));
 
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     return () => {
+      if (flashTimeout.current) {
+        clearTimeout(flashTimeout.current);
+      }
       if (dropIndicatorRaf.current) {
         cancelAnimationFrame(dropIndicatorRaf.current);
       }
@@ -403,12 +409,14 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
     });
   }, []);
 
-  const registerTile = useCallback((id: DashboardWidgetId, element: HTMLElement | null) => {
-    if (element) {
-      tileRegistry.current.set(id, element);
-      return;
+  const flashTile = useCallback((id: DashboardWidgetId) => {
+    setFlashId(id);
+    if (flashTimeout.current) {
+      clearTimeout(flashTimeout.current);
     }
-    tileRegistry.current.delete(id);
+    flashTimeout.current = setTimeout(() => {
+      setFlashId(null);
+    }, 380);
   }, []);
 
   const handleDragStart = useCallback((id: DashboardWidgetId) => {
@@ -441,7 +449,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           scheduleDropIndicator(null);
           return;
         }
-        const edge = extractClosestEdge(target.data);
+        const edge = getClosestEdge(target.element, location.current.input.clientY);
         scheduleDropIndicator({ id: targetId, edge });
       },
       onDrop: ({ location, source }) => {
@@ -466,27 +474,21 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           return;
         }
 
-        const closestEdgeOfTarget = extractClosestEdge(target.data);
-        const finishIndex = getReorderDestinationIndex({
-          startIndex,
-          indexOfTarget,
-          closestEdgeOfTarget,
-          axis: "vertical",
-        });
+        const closestEdgeOfTarget = getClosestEdge(
+          target.element,
+          location.current.input.clientY
+        );
+        const finishIndex = getReorderIndex(startIndex, indexOfTarget, closestEdgeOfTarget);
 
         if (finishIndex === startIndex || finishIndex === -1) {
           return;
         }
 
         reorderVisibleWidgets(startIndex, finishIndex);
-
-        const movedElement = tileRegistry.current.get(sourceId);
-        if (movedElement) {
-          triggerPostMoveFlash(movedElement);
-        }
+        flashTile(sourceId);
       },
     });
-  }, [editMode, instanceId, reorderVisibleWidgets, scheduleDropIndicator]);
+  }, [editMode, flashTile, instanceId, reorderVisibleWidgets, scheduleDropIndicator]);
 
   const handleSave = () => {
     const payload = toPayload(draftLayout);
@@ -740,6 +742,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           const node = widgetMap.get(item.id);
           if (!node) return null;
           const isDragging = draggingId === item.id;
+          const isFlash = flashId === item.id;
           const isDropTarget = dropIndicator?.id === item.id && draggingId !== item.id;
           const dropEdge = isDropTarget ? dropIndicator?.edge ?? null : null;
           const showDropHint = Boolean(draggingId) && isDropTarget;
@@ -755,9 +758,9 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
               dropEdge={dropEdge}
               isDragging={isDragging}
               showDropHint={showDropHint}
+              isFlash={isFlash}
               onDragStart={handleDragStart}
               onDragClear={handleDragClear}
-              onRegister={registerTile}
             />
           );
         })}
