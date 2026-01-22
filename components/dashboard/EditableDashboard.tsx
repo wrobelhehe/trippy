@@ -424,8 +424,10 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 "relative transition-all duration-200 lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
                 editMode && "rounded-3xl outline outline-1 outline-white/10",
                 editMode && isDropTarget && "outline-2 outline-emerald-400/70",
-                editMode && isDragging && "opacity-70"
+                editMode && isDragging && "opacity-70",
+                editMode && "cursor-grab select-none active:cursor-grabbing"
               )}
+              draggable={editMode}
               style={
                 {
                   order: item.order,
@@ -439,6 +441,16 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 setDropTargetId(item.id);
+              }}
+              onDragStart={(event) => {
+                if (!editMode) return;
+                event.dataTransfer.setData("text/plain", item.id);
+                event.dataTransfer.effectAllowed = "move";
+                setDraggingId(item.id);
+              }}
+              onDragEnd={() => {
+                if (!editMode) return;
+                setDraggingId(null);
               }}
               onDragLeave={() => {
                 if (!editMode) return;
@@ -469,22 +481,9 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 </div>
               ) : null}
               {editMode ? (
-                <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-[#10151d]/90 px-3 py-1 text-xs text-white/70 shadow-lg">
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 text-white/80 cursor-grab active:cursor-grabbing touch-none"
-                    draggable
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData("text/plain", item.id);
-                      event.dataTransfer.effectAllowed = "move";
-                      setDraggingId(item.id);
-                    }}
-                    onDragEnd={() => setDraggingId(null)}
-                    aria-label={`Move ${meta?.title ?? "widget"}`}
-                  >
-                    <GripVertical className="size-4" />
-                    Move
-                  </button>
+                <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-[#10151d]/90 px-3 py-1 text-xs text-white/70 shadow-lg">
+                  <GripVertical className="size-4 text-white/80" />
+                  <span className="text-white/80">Drag to move</span>
                   {meta ? (
                     <span className="hidden text-[11px] uppercase tracking-[0.2em] text-white/50 sm:inline">
                       {meta.title}
@@ -495,6 +494,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
               <div
                 className={cn(
                   "h-full",
+                  editMode && "pointer-events-none",
                   editMode && isDragging && "scale-[0.98]"
                 )}
               >
