@@ -263,51 +263,53 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 </div>
               )}
             </div>
-            <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-center">
-              <div className="space-y-3">
-                <CardTitle className="text-2xl text-white sm:text-3xl">
-                  Shape the view that keeps your travel momentum alive.
-                </CardTitle>
-                <CardDescription className="text-base text-white/70">
-                  Arrange the tiles around what matters most. Edit mode lets you
-                  drag, resize, and decide which widgets should stay front and
-                  center.
-                </CardDescription>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    <GripVertical className="size-3 text-white/70" />
-                    Drag handles to reorder
-                  </div>
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    <Maximize2 className="size-3 text-white/70" />
-                    Resize width & height
-                  </div>
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                    <LayoutGrid className="size-3 text-white/70" />
-                    Toggle widgets from the library
+            {editMode ? (
+              <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-center">
+                <div className="space-y-3">
+                  <CardTitle className="text-2xl text-white sm:text-3xl">
+                    Shape the view that keeps your travel momentum alive.
+                  </CardTitle>
+                  <CardDescription className="text-base text-white/70">
+                    Arrange the tiles around what matters most. Edit mode lets you
+                    drag, resize, and decide which widgets should stay front and
+                    center.
+                  </CardDescription>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      <GripVertical className="size-3 text-white/70" />
+                      Drag handles to reorder
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      <Maximize2 className="size-3 text-white/70" />
+                      Resize width & height
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      <LayoutGrid className="size-3 text-white/70" />
+                      Toggle widgets from the library
+                    </div>
                   </div>
                 </div>
+                <div className="rounded-2xl border border-white/10 bg-[color:var(--panel-2)]/80 p-4 text-sm text-muted-foreground">
+                  <p className="text-xs uppercase tracking-[0.32em] text-white/60">
+                    What you can do
+                  </p>
+                  <ul className="mt-3 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <ArrowUp className="size-4 text-emerald-300" />
+                      Prioritize the tiles that keep you moving.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ArrowDown className="size-4 text-sky-300" />
+                      Minimize sections you rarely visit.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Plus className="size-4 text-amber-300" />
+                      Bring back any widget in one click.
+                    </li>
+                  </ul>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[color:var(--panel-2)]/80 p-4 text-sm text-muted-foreground">
-                <p className="text-xs uppercase tracking-[0.32em] text-white/60">
-                  What you can do
-                </p>
-                <ul className="mt-3 space-y-2">
-                  <li className="flex items-center gap-2">
-                    <ArrowUp className="size-4 text-emerald-300" />
-                    Prioritize the tiles that keep you moving.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ArrowDown className="size-4 text-sky-300" />
-                    Minimize sections you rarely visit.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Plus className="size-4 text-amber-300" />
-                    Bring back any widget in one click.
-                  </li>
-                </ul>
-              </div>
-            </div>
+            ) : null}
             {editMode ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
                 <div className="flex flex-wrap items-center gap-3">
