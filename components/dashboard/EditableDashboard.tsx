@@ -168,7 +168,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       setSavedLayout(payload);
       setEditMode(false);
       setIsLibraryOpen(false);
-      setStatusMessage("Dashboard updated.");
     });
   };
 
