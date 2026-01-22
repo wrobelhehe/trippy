@@ -2,6 +2,7 @@
 
 import { type CSSProperties, type ReactNode, useMemo, useState, useTransition } from "react";
 import {
+  ArrowDown,
   ArrowUp,
   GripVertical,
   LayoutGrid,
@@ -115,6 +116,24 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       nextOrder.splice(sourceIndex, 1);
       nextOrder.splice(targetIndex, 0, sourceId);
 
+      const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
+      return prev.map((item) =>
+        orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
+      );
+    });
+  };
+
+  const moveWidget = (widgetId: DashboardWidgetId, direction: "up" | "down") => {
+    setDraftLayout((prev) => {
+      const visible = prev.filter((item) => item.visible);
+      const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
+      const currentIndex = order.indexOf(widgetId);
+      if (currentIndex === -1) return prev;
+      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= order.length) return prev;
+      const nextOrder = [...order];
+      nextOrder.splice(currentIndex, 1);
+      nextOrder.splice(targetIndex, 0, widgetId);
       const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
       return prev.map((item) =>
         orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
@@ -244,9 +263,13 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                     drag and decide which widgets should stay front and center.
                   </CardDescription>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                    <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 sm:flex">
                       <GripVertical className="size-3 text-white/70" />
                       Drag tiles to reorder
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 sm:hidden">
+                      <ArrowUp className="size-3 text-white/70" />
+                      Use arrows in the library to reorder
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
                       <LayoutGrid className="size-3 text-white/70" />
@@ -281,7 +304,12 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                   <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                     Editing
                   </span>
-                  <span>Drag tiles or open the widget library.</span>
+                  <span className="hidden sm:inline">
+                    Drag tiles or open the widget library.
+                  </span>
+                  <span className="sm:hidden">
+                    Use arrows in the widget library to reorder.
+                  </span>
                 </div>
                 <Sheet open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
                   <SheetTrigger asChild>
@@ -302,6 +330,12 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                         const layoutItem = layoutById.get(widget.id);
                         const isVisible = layoutItem?.visible ?? true;
                         const isLastVisible = isVisible && visibleLayout.length <= 1;
+                        const visibleIndex = visibleLayout.findIndex(
+                          (item) => item.id === widget.id
+                        );
+                        const isFirstVisible = visibleIndex <= 0;
+                        const isLastVisibleOrder =
+                          visibleIndex === visibleLayout.length - 1;
                         return (
                           <div
                             key={widget.id}
@@ -328,7 +362,37 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                               <p className="mt-4 text-xs text-white/45">
                                 Hidden from dashboard. Toggle on to place it.
                               </p>
-                            ) : null}
+                            ) : (
+                              <div className="mt-4 flex items-center justify-between sm:hidden">
+                                <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
+                                  Order
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                                    onClick={() => moveWidget(widget.id, "up")}
+                                    disabled={isFirstVisible || isLastVisible}
+                                    aria-label={`Move ${widget.title} up`}
+                                  >
+                                    <ArrowUp className="size-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                                    onClick={() => moveWidget(widget.id, "down")}
+                                    disabled={isLastVisibleOrder || isLastVisible}
+                                    aria-label={`Move ${widget.title} down`}
+                                  >
+                                    <ArrowDown className="size-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
