@@ -3,6 +3,7 @@
 import {
   type CSSProperties,
   type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -24,7 +25,13 @@ import {
 import { Shine } from "@/components/animate-ui/primitives/effects/shine";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import {
+  draggable,
+  dropTargetForElements,
+  monitorForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import {
   Sheet,
   SheetContent,
@@ -58,6 +65,143 @@ const getLayoutById = (layout: DashboardLayoutItem[]) =>
 const toPayload = (layout: DashboardLayoutItem[]) =>
   serializeDashboardLayout(normalizeDashboardLayout(layout));
 
+const getDragId = (data: Record<string, unknown>) => {
+  const id = data.id;
+  return typeof id === "string" ? (id as DashboardWidgetId) : null;
+};
+
+type DashboardTileProps = {
+  item: DashboardLayoutItem;
+  node: ReactNode;
+  editMode: boolean;
+  isDropTarget: boolean;
+  isDragging: boolean;
+  showDropHint: boolean;
+  isDropFlash: boolean;
+  onDragStart: (id: DashboardWidgetId) => void;
+  onDragClear: () => void;
+  onDragEnter: (id: DashboardWidgetId) => void;
+  onDragLeave: (id: DashboardWidgetId) => void;
+  onDropComplete: (id: DashboardWidgetId) => void;
+  onReorder: (sourceId: DashboardWidgetId, targetId: DashboardWidgetId) => void;
+};
+
+function DashboardTile({
+  item,
+  node,
+  editMode,
+  isDropTarget,
+  isDragging,
+  showDropHint,
+  isDropFlash,
+  onDragStart,
+  onDragClear,
+  onDragEnter,
+  onDragLeave,
+  onDropComplete,
+  onReorder,
+}: DashboardTileProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!editMode) return;
+    const element = ref.current;
+    if (!element) return;
+
+    return combine(
+      draggable({
+        element,
+        canDrag: () => editMode,
+        getInitialData: () => ({ id: item.id }),
+        onDragStart: () => onDragStart(item.id),
+        onDrop: () => onDragClear(),
+      }),
+      dropTargetForElements({
+        element,
+        canDrop: () => editMode,
+        getData: () => ({ id: item.id }),
+        onDragEnter: () => onDragEnter(item.id),
+        onDragLeave: () => onDragLeave(item.id),
+        onDrop: ({ source }) => {
+          const sourceId = getDragId(source.data);
+          if (sourceId && sourceId !== item.id) {
+            onReorder(sourceId, item.id);
+          }
+          onDropComplete(item.id);
+        },
+      })
+    );
+  }, [
+    editMode,
+    item.id,
+    onDragClear,
+    onDragEnter,
+    onDragLeave,
+    onDragStart,
+    onDropComplete,
+    onReorder,
+  ]);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "relative transition-[transform,opacity,box-shadow,outline-color,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
+        editMode && "rounded-3xl outline outline-1 outline-white/10 bg-white/[0.02]",
+        editMode &&
+          isDropTarget &&
+          "outline-2 outline-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_18px_45px_-35px_rgba(16,185,129,0.85)]",
+        editMode &&
+          isDropFlash &&
+          "outline-2 outline-emerald-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.4),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
+        editMode &&
+          isDragging &&
+          "opacity-80 scale-[0.98] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.7)]",
+        editMode && "cursor-grab select-none active:cursor-grabbing transform-gpu will-change-transform"
+      )}
+      style={
+        {
+          order: item.order,
+          minHeight: item.rowSpan * LAYOUT_ROW_HEIGHT,
+          "--col-span": item.colSpan,
+          "--row-span": item.rowSpan,
+        } as CSSProperties
+      }
+    >
+      {editMode && showDropHint ? (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-2 rounded-3xl border border-dashed border-white/10 transition-all duration-200 ease-out",
+            isDropTarget &&
+              "border-emerald-300/80 bg-emerald-400/10 shadow-[0_0_35px_-12px_rgba(16,185,129,0.85)]"
+          )}
+        >
+          {isDropTarget ? (
+            <span className="absolute left-4 top-3 rounded-full bg-emerald-500/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-50 shadow-[0_8px_24px_-14px_rgba(16,185,129,0.9)]">
+              Drop to place
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {editMode ? (
+        <div className="pointer-events-none absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-900 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.6)] ring-1 ring-black/10 backdrop-blur">
+          <GripVertical className="size-4 text-slate-900/70" />
+          <span className="hidden sm:inline">Drag to move</span>
+        </div>
+      ) : null}
+      <div
+        className={cn(
+          "h-full",
+          editMode && "pointer-events-none",
+          editMode && isDragging && "scale-[0.98]"
+        )}
+      >
+        {node}
+      </div>
+    </div>
+  );
+}
+
 export function EditableDashboard({ initialLayout, widgets }: EditableDashboardProps) {
   const [savedLayout, setSavedLayout] = useState(() =>
     normalizeDashboardLayout(initialLayout)
@@ -83,6 +227,16 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!editMode) return;
+    return monitorForElements({
+      onDrop: () => {
+        setDraggingId(null);
+        setDropTargetId(null);
+      },
+    });
+  }, [editMode]);
 
   const widgetMap = useMemo(
     () => new Map(Object.entries(widgets) as [DashboardWidgetId, ReactNode][]),
@@ -122,26 +276,29 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
     setStatusMessage(null);
   };
 
-  const reorderWidgets = (sourceId: DashboardWidgetId, targetId: DashboardWidgetId) => {
-    setDraftLayout((prev) => {
-      const visible = prev.filter((item) => item.visible);
-      const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
-      const sourceIndex = order.indexOf(sourceId);
-      const targetIndex = order.indexOf(targetId);
-      if (sourceIndex === -1 || targetIndex === -1) return prev;
+  const reorderWidgets = useCallback(
+    (sourceId: DashboardWidgetId, targetId: DashboardWidgetId) => {
+      setDraftLayout((prev) => {
+        const visible = prev.filter((item) => item.visible);
+        const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
+        const sourceIndex = order.indexOf(sourceId);
+        const targetIndex = order.indexOf(targetId);
+        if (sourceIndex === -1 || targetIndex === -1) return prev;
 
-      const nextOrder = [...order];
-      nextOrder.splice(sourceIndex, 1);
-      nextOrder.splice(targetIndex, 0, sourceId);
+        const nextOrder = [...order];
+        nextOrder.splice(sourceIndex, 1);
+        nextOrder.splice(targetIndex, 0, sourceId);
 
-      const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
-      return prev.map((item) =>
-        orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
-      );
-    });
-  };
+        const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
+        return prev.map((item) =>
+          orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
+        );
+      });
+    },
+    []
+  );
 
-  const moveWidget = (widgetId: DashboardWidgetId, direction: "up" | "down") => {
+  const moveWidget = useCallback((widgetId: DashboardWidgetId, direction: "up" | "down") => {
     setDraftLayout((prev) => {
       const visible = prev.filter((item) => item.visible);
       const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
@@ -157,7 +314,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
         orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
       );
     });
-  };
+  }, []);
 
   const handleToggleWidget = (
     widgetId: DashboardWidgetId,
@@ -180,6 +337,42 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       });
     });
   };
+
+  const flashDrop = useCallback((targetId: DashboardWidgetId) => {
+    setDropFlashId(targetId);
+    if (dropFlashTimeout.current) {
+      clearTimeout(dropFlashTimeout.current);
+    }
+    dropFlashTimeout.current = setTimeout(() => {
+      setDropFlashId(null);
+    }, 320);
+  }, []);
+
+  const handleDragStart = useCallback((id: DashboardWidgetId) => {
+    setDraggingId(id);
+  }, []);
+
+  const handleDragClear = useCallback(() => {
+    setDraggingId(null);
+    setDropTargetId(null);
+  }, []);
+
+  const handleDragEnter = useCallback((id: DashboardWidgetId) => {
+    setDropTargetId((current) => (current === id ? current : id));
+  }, []);
+
+  const handleDragLeave = useCallback((id: DashboardWidgetId) => {
+    setDropTargetId((current) => (current === id ? null : current));
+  }, []);
+
+  const handleDropComplete = useCallback(
+    (id: DashboardWidgetId) => {
+      setDraggingId(null);
+      setDropTargetId(null);
+      flashDrop(id);
+    },
+    [flashDrop]
+  );
 
   const handleSave = () => {
     const payload = toPayload(draftLayout);
@@ -429,7 +622,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       <div className="grid gap-6 sm:grid-cols-2 lg:auto-rows-[minmax(150px,auto)] lg:grid-cols-12 lg:grid-flow-dense">
         {visibleLayout.map((item) => {
           const node = widgetMap.get(item.id);
-          const meta = DASHBOARD_WIDGETS.find((widget) => widget.id === item.id);
           if (!node) return null;
           const isDropTarget = dropTargetId === item.id && draggingId !== item.id;
           const isDragging = draggingId === item.id;
@@ -437,102 +629,22 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           const isDropFlash = dropFlashId === item.id;
 
           return (
-            <div
+            <DashboardTile
               key={item.id}
-              className={cn(
-                "relative transition-[transform,opacity,box-shadow,outline-color,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
-                editMode && "rounded-3xl outline outline-1 outline-white/10 bg-white/[0.02]",
-                editMode &&
-                  isDropTarget &&
-                  "outline-2 outline-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_18px_45px_-35px_rgba(16,185,129,0.85)]",
-                editMode &&
-                  isDropFlash &&
-                  "outline-2 outline-emerald-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.4),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
-                editMode && isDragging && "opacity-80 scale-[0.98] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.7)]",
-                editMode && "cursor-grab select-none active:cursor-grabbing transform-gpu will-change-transform"
-              )}
-              draggable={editMode}
-              style={
-                {
-                  order: item.order,
-                  minHeight: item.rowSpan * LAYOUT_ROW_HEIGHT,
-                  "--col-span": item.colSpan,
-                  "--row-span": item.rowSpan,
-                } as CSSProperties
-              }
-              onDragEnter={(event) => {
-                if (!editMode) return;
-                event.preventDefault();
-                setDropTargetId((current) => (current === item.id ? current : item.id));
-              }}
-              onDragOver={(event) => {
-                if (!editMode) return;
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
-              }}
-              onDragStart={(event) => {
-                if (!editMode) return;
-                event.dataTransfer.setData("text/plain", item.id);
-                event.dataTransfer.effectAllowed = "move";
-                setDraggingId(item.id);
-              }}
-              onDragEnd={() => {
-                if (!editMode) return;
-                setDraggingId(null);
-                setDropTargetId(null);
-              }}
-              onDragLeave={() => {
-                if (!editMode) return;
-                setDropTargetId((current) => (current === item.id ? null : current));
-              }}
-              onDrop={(event) => {
-                if (!editMode || !draggingId) return;
-                event.preventDefault();
-                if (draggingId !== item.id) {
-                  reorderWidgets(draggingId, item.id);
-                }
-                setDraggingId(null);
-                setDropTargetId(null);
-                setDropFlashId(item.id);
-                if (dropFlashTimeout.current) {
-                  clearTimeout(dropFlashTimeout.current);
-                }
-                dropFlashTimeout.current = setTimeout(() => {
-                  setDropFlashId(null);
-                }, 320);
-              }}
-            >
-              {editMode && showDropHint ? (
-                <div
-                  className={cn(
-                    "pointer-events-none absolute inset-2 rounded-3xl border border-dashed border-white/10 transition-all duration-200 ease-out",
-                    isDropTarget &&
-                      "border-emerald-300/80 bg-emerald-400/10 shadow-[0_0_35px_-12px_rgba(16,185,129,0.85)]"
-                  )}
-                >
-                  {isDropTarget ? (
-                    <span className="absolute left-4 top-3 rounded-full bg-emerald-500/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-50 shadow-[0_8px_24px_-14px_rgba(16,185,129,0.9)]">
-                      Drop to place
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
-              {editMode ? (
-                <div className="pointer-events-none absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-900 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.6)] ring-1 ring-black/10 backdrop-blur">
-                  <GripVertical className="size-4 text-slate-900/70" />
-                  <span className="hidden sm:inline">Drag to move</span>
-                </div>
-              ) : null}
-              <div
-                className={cn(
-                  "h-full",
-                  editMode && "pointer-events-none",
-                  editMode && isDragging && "scale-[0.98]"
-                )}
-              >
-                {node}
-              </div>
-            </div>
+              item={item}
+              node={node}
+              editMode={editMode}
+              isDropTarget={isDropTarget}
+              isDragging={isDragging}
+              showDropHint={showDropHint}
+              isDropFlash={isDropFlash}
+              onDragStart={handleDragStart}
+              onDragClear={handleDragClear}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDropComplete={handleDropComplete}
+              onReorder={reorderWidgets}
+            />
           );
         })}
       </div>
