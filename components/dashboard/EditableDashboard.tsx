@@ -1,6 +1,14 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useMemo, useState, useTransition } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -60,11 +68,21 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
   const [editMode, setEditMode] = useState(false);
   const [draggingId, setDraggingId] = useState<DashboardWidgetId | null>(null);
   const [dropTargetId, setDropTargetId] = useState<DashboardWidgetId | null>(null);
+  const [dropFlashId, setDropFlashId] = useState<DashboardWidgetId | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
+  const dropFlashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    return () => {
+      if (dropFlashTimeout.current) {
+        clearTimeout(dropFlashTimeout.current);
+      }
+    };
+  }, []);
 
   const widgetMap = useMemo(
     () => new Map(Object.entries(widgets) as [DashboardWidgetId, ReactNode][]),
@@ -318,14 +336,14 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                       Widget library
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="border-white/10 bg-[#0b0f14] text-white sm:max-w-[520px]">
-                    <SheetHeader>
+                  <SheetContent className="min-h-0 gap-0 overflow-y-auto border-white/10 bg-[#0b0f14] text-white sm:max-w-[520px]">
+                    <SheetHeader className="sticky top-0 z-10 border-b border-white/10 bg-[#0b0f14]/95 px-4 pt-6 pb-3 backdrop-blur sm:px-6">
                       <SheetTitle>Widget library</SheetTitle>
                       <SheetDescription className="text-white/60">
                         Add or hide tiles to keep the view focused.
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="mt-6 grid gap-4">
+                    <div className="mt-4 grid gap-4 px-4 pb-6 sm:px-6">
                       {DASHBOARD_WIDGETS.map((widget) => {
                         const layoutItem = layoutById.get(widget.id);
                         const isVisible = layoutItem?.visible ?? true;
@@ -416,16 +434,22 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           const isDropTarget = dropTargetId === item.id && draggingId !== item.id;
           const isDragging = draggingId === item.id;
           const showDropHint = Boolean(draggingId) && draggingId !== item.id;
+          const isDropFlash = dropFlashId === item.id;
 
           return (
             <div
               key={item.id}
               className={cn(
-                "relative transition-all duration-200 lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
-                editMode && "rounded-3xl outline outline-1 outline-white/10",
-                editMode && isDropTarget && "outline-2 outline-emerald-400/70",
-                editMode && isDragging && "opacity-70",
-                editMode && "cursor-grab select-none active:cursor-grabbing"
+                "relative transition-[transform,opacity,box-shadow,outline-color,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
+                editMode && "rounded-3xl outline outline-1 outline-white/10 bg-white/[0.02]",
+                editMode &&
+                  isDropTarget &&
+                  "outline-2 outline-emerald-400/80 shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_18px_45px_-35px_rgba(16,185,129,0.85)]",
+                editMode &&
+                  isDropFlash &&
+                  "outline-2 outline-emerald-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.4),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
+                editMode && isDragging && "opacity-80 scale-[0.98] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.7)]",
+                editMode && "cursor-grab select-none active:cursor-grabbing transform-gpu will-change-transform"
               )}
               draggable={editMode}
               style={
@@ -436,11 +460,15 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                   "--row-span": item.rowSpan,
                 } as CSSProperties
               }
+              onDragEnter={(event) => {
+                if (!editMode) return;
+                event.preventDefault();
+                setDropTargetId((current) => (current === item.id ? current : item.id));
+              }}
               onDragOver={(event) => {
                 if (!editMode) return;
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
-                setDropTargetId(item.id);
               }}
               onDragStart={(event) => {
                 if (!editMode) return;
@@ -451,6 +479,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
               onDragEnd={() => {
                 if (!editMode) return;
                 setDraggingId(null);
+                setDropTargetId(null);
               }}
               onDragLeave={() => {
                 if (!editMode) return;
@@ -464,31 +493,34 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 }
                 setDraggingId(null);
                 setDropTargetId(null);
+                setDropFlashId(item.id);
+                if (dropFlashTimeout.current) {
+                  clearTimeout(dropFlashTimeout.current);
+                }
+                dropFlashTimeout.current = setTimeout(() => {
+                  setDropFlashId(null);
+                }, 320);
               }}
             >
               {editMode && showDropHint ? (
                 <div
                   className={cn(
-                    "pointer-events-none absolute inset-2 rounded-3xl border border-dashed border-white/10 transition-all duration-200",
-                    isDropTarget && "border-emerald-400/70 bg-emerald-500/10"
+                    "pointer-events-none absolute inset-2 rounded-3xl border border-dashed border-white/10 transition-all duration-200 ease-out",
+                    isDropTarget &&
+                      "border-emerald-300/80 bg-emerald-400/10 shadow-[0_0_35px_-12px_rgba(16,185,129,0.85)]"
                   )}
                 >
                   {isDropTarget ? (
-                    <span className="absolute left-4 top-3 text-[10px] uppercase tracking-[0.32em] text-emerald-100/80">
+                    <span className="absolute left-4 top-3 rounded-full bg-emerald-500/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-50 shadow-[0_8px_24px_-14px_rgba(16,185,129,0.9)]">
                       Drop to place
                     </span>
                   ) : null}
                 </div>
               ) : null}
               {editMode ? (
-                <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-[#10151d]/90 px-3 py-1 text-xs text-white/70 shadow-lg">
-                  <GripVertical className="size-4 text-white/80" />
-                  <span className="text-white/80">Drag to move</span>
-                  {meta ? (
-                    <span className="hidden text-[11px] uppercase tracking-[0.2em] text-white/50 sm:inline">
-                      {meta.title}
-                    </span>
-                  ) : null}
+                <div className="pointer-events-none absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-900 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.6)] ring-1 ring-black/10 backdrop-blur">
+                  <GripVertical className="size-4 text-slate-900/70" />
+                  <span className="hidden sm:inline">Drag to move</span>
                 </div>
               ) : null}
               <div
