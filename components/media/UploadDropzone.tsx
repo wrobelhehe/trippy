@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function UploadDropzone({
   tripId,
@@ -15,6 +18,8 @@ export function UploadDropzone({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputId = useId();
+  const router = useRouter();
 
   const handleUpload = async (file: File) => {
     setLoading(true);
@@ -70,6 +75,7 @@ export function UploadDropzone({
       }
 
       onUploaded?.();
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -91,23 +97,24 @@ export function UploadDropzone({
           {error}
         </div>
       ) : null}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-black/10 bg-white/60 px-4 py-5 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-white/10 bg-[color:var(--panel-3)]/80 px-4 py-5 text-sm text-muted-foreground">
         <div>
           <p className="text-foreground">Drop media or browse files.</p>
           <p className="text-xs">Photos and short videos keep the story alive.</p>
         </div>
         <Button asChild disabled={loading}>
-          <label>
+          <Label htmlFor={inputId} className="cursor-pointer">
             {loading ? "Uploading..." : "Upload"}
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*,video/*"
-              onChange={handleChange}
-              disabled={loading}
-            />
-          </label>
+          </Label>
         </Button>
+        <Input
+          id={inputId}
+          type="file"
+          className="hidden"
+          accept="image/*,video/*"
+          onChange={handleChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );

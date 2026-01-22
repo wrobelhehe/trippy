@@ -9,7 +9,7 @@
 
 ### trips
 - **Fields**: id (uuid, pk), owner_id (uuid, fk profiles.id), title, place_name, country_code?, lat?, lng?, start_date?, end_date?, short_description?, cover_media_id?, tags (text[]), privacy_mode (enum: private|link|public), hide_exact_dates (bool, default true), moments_count, media_count, created_at, updated_at, deleted_at?
-- **Relationships**: belongs to profile; has many moments, trip_highlights, share_links, share_assets, trip_media
+- **Relationships**: belongs to profile; has many moments, trip_highlights, share_links, trip_media
 - **Validation**: title + place_name required; start_date <= end_date when both present; deleted_at drives soft delete
 
 ### moments
@@ -42,11 +42,6 @@
 - **Relationships**: belongs to profile; optionally to trip
 - **Validation**: token_hash stored only; expires_at default 30 days; revocation immediate
 
-### share_assets
-- **Fields**: id, owner_id, scope (trip|profile), trip_id?, asset_type (story|square|widget), template_key, storage_path, watermark (bool), created_at
-- **Relationships**: belongs to profile; optionally to trip
-- **Validation**: entitlements enforce template and watermark rules
-
 ### ai_jobs
 - **Fields**: id, owner_id, job_type (trip_from_photos|ticket_import), status (queued|processing|succeeded|failed), input (jsonb), output (jsonb), error (jsonb), cost_usd (numeric), created_at, updated_at
 - **Relationships**: belongs to profile
@@ -70,7 +65,7 @@
 ## Relationships (summary)
 
 - profiles 1:many trips, moments, media, share_links, ai_jobs, subscriptions
-- trips 1:many moments, trip_highlights, share_assets, trip_media
+- trips 1:many moments, trip_highlights, trip_media
 - moments 1:many moment_media
 - media many:many trips/moments via join tables
 

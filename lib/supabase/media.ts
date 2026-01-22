@@ -124,16 +124,22 @@ export async function listTripMedia(tripId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((item) => {
-    const media = item.media as Media;
-    const { data: publicUrl } = supabase.storage
-      .from(media.storage_bucket)
-      .getPublicUrl(media.storage_path);
-    return {
-      ...media,
-      public_url: publicUrl.publicUrl ?? null,
-    };
-  });
+  return (data ?? [])
+    .map((item) => {
+      const mediaValue = item.media as unknown as Media | Media[] | null;
+      const media = Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+      if (!media) {
+        return null;
+      }
+      const { data: publicUrl } = supabase.storage
+        .from(media.storage_bucket)
+        .getPublicUrl(media.storage_path);
+      return {
+        ...media,
+        public_url: publicUrl.publicUrl ?? null,
+      };
+    })
+    .filter((item): item is Media => Boolean(item));
 }
 
 export async function listMomentMedia(momentId: string) {
@@ -148,14 +154,20 @@ export async function listMomentMedia(momentId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((item) => {
-    const media = item.media as Media;
-    const { data: publicUrl } = supabase.storage
-      .from(media.storage_bucket)
-      .getPublicUrl(media.storage_path);
-    return {
-      ...media,
-      public_url: publicUrl.publicUrl ?? null,
-    };
-  });
+  return (data ?? [])
+    .map((item) => {
+      const mediaValue = item.media as unknown as Media | Media[] | null;
+      const media = Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+      if (!media) {
+        return null;
+      }
+      const { data: publicUrl } = supabase.storage
+        .from(media.storage_bucket)
+        .getPublicUrl(media.storage_path);
+      return {
+        ...media,
+        public_url: publicUrl.publicUrl ?? null,
+      };
+    })
+    .filter((item): item is Media => Boolean(item));
 }

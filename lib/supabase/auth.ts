@@ -1,3 +1,5 @@
+"use server";
+
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -11,8 +13,6 @@ async function getOrigin() {
 }
 
 export async function signInWithEmail(formData: FormData) {
-  "use server";
-
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? DEFAULT_REDIRECT);
@@ -35,16 +35,21 @@ export async function signInWithEmail(formData: FormData) {
   redirect(safeRedirectTo);
 }
 
-export async function signInWithGoogle() {
-  "use server";
-
+export async function signInWithGoogle(formData?: FormData) {
   const supabase = await createClient();
   const origin = await getOrigin();
+  const redirectTo = String(formData?.get("redirectTo") ?? DEFAULT_REDIRECT);
+  const safeRedirectTo =
+    redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : DEFAULT_REDIRECT;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+        safeRedirectTo
+      )}`,
     },
   });
 
@@ -60,8 +65,6 @@ export async function signInWithGoogle() {
 }
 
 export async function signUpWithEmail(formData: FormData) {
-  "use server";
-
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const origin = await getOrigin();
@@ -87,8 +90,6 @@ export async function signUpWithEmail(formData: FormData) {
 }
 
 export async function verifyOtp(formData: FormData) {
-  "use server";
-
   const email = String(formData.get("email") ?? "").trim();
   const token = String(formData.get("token") ?? "").trim();
   const type = String(formData.get("type") ?? "signup");
@@ -112,8 +113,6 @@ export async function verifyOtp(formData: FormData) {
 }
 
 export async function requestPasswordReset(formData: FormData) {
-  "use server";
-
   const email = String(formData.get("email") ?? "").trim();
   const origin = await getOrigin();
 
@@ -130,12 +129,10 @@ export async function requestPasswordReset(formData: FormData) {
     redirect(`/forgot-password?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect(`/verify?status=recovery-sent&email=${encodeURIComponent(email)}`);
+  redirect(`/forgot-password?status=sent&email=${encodeURIComponent(email)}`);
 }
 
 export async function updatePassword(formData: FormData) {
-  "use server";
-
   const password = String(formData.get("password") ?? "");
 
   if (!password) {
@@ -153,8 +150,6 @@ export async function updatePassword(formData: FormData) {
 }
 
 export async function signOut() {
-  "use server";
-
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/sign-in");

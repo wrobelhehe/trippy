@@ -1,23 +1,26 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Link2, Pencil } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { TripStats } from "@/components/trips/TripStats";
-import { MomentForm } from "@/components/trips/MomentForm";
-import { HighlightsEditor } from "@/components/trips/HighlightsEditor";
-import { MediaGallery } from "@/components/media/MediaGallery";
-import { UploadDropzone } from "@/components/media/UploadDropzone";
-import { SharePanel } from "@/components/trips/SharePanel";
-import { listMoments } from "@/lib/supabase/moments";
-import { listTripMedia } from "@/lib/supabase/media";
+import { ShareTripView } from "@/components/share/ShareTripView";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getTripSharePayloadForLink, type ShareLinkRecord } from "@/lib/share/serializer";
+import { listShareLinks } from "@/lib/share/share-links";
 import { getTrip } from "@/lib/supabase/trips";
 
-export default async function TripDetailPage({
+function pickActiveLink(links: ShareLinkRecord[]) {
+  const now = Date.now();
+  return links.find((link) => {
+    if (link.revoked_at) return false;
+    if (link.expires_at && new Date(link.expires_at).getTime() <= now) {
+      return false;
+    }
+    return true;
+  });
+}
+
+export default async function TripPreviewPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -29,100 +32,44 @@ export default async function TripDetailPage({
     notFound();
   }
 
-  const [moments, media] = await Promise.all([
-    listMoments(trip.id),
-    listTripMedia(trip.id),
-  ]);
+  const links = (await listShareLinks({
+    tripId: trip.id,
+    scope: "trip",
+  })) as ShareLinkRecord[];
+  const activeLink = pickActiveLink(links);
+  const previewPayload = activeLink
+    ? await getTripSharePayloadForLink(activeLink)
+    : null;
+
+  if (!previewPayload) {
+    return (
+      <EmptyState
+        icon={Link2}
+        title="No share preview yet"
+        description="Create a share link to preview the guest experience."
+        actionLabel="Edit trip"
+        actionHref={`/trips/${trip.id}/edit`}
+        className="border-white/10 bg-[color:var(--panel)]/70"
+      />
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {trip.place_name}
-        </p>
-        <h1 className="text-3xl font-semibold">{trip.title}</h1>
-        {trip.short_description ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            {trip.short_description}
-          </p>
-        ) : null}
-      </div>
-
-      <TripStats
-        moments={trip.moments_count}
-        media={trip.media_count}
-        privacyMode={trip.privacy_mode}
+    <div className="-mx-4 md:-mx-8">
+      <ShareTripView
+        payload={previewPayload}
+        fullBleed
+        headerLabel="Trip preview"
+        headerAction={(
+          <Button asChild className="gap-2">
+            <Link href={`/trips/${trip.id}/edit`}>
+              Edit trip
+              <Pencil className="size-4" />
+            </Link>
+          </Button>
+        )}
+        showGuestCta={false}
       />
-
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border border-black/5 bg-white/80 shadow-lg backdrop-blur">
-          <CardHeader>
-            <CardTitle className="text-xl">Moments</CardTitle>
-            <CardDescription>
-              Add notes, timestamps, and locations for this trip.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <MomentForm tripId={trip.id} />
-            {moments.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-6 text-sm text-muted-foreground">
-                No moments yet. Add your first diary entry.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {moments.map((moment) => (
-                  <div
-                    key={moment.id}
-                    className="rounded-2xl border border-black/5 bg-white/70 px-4 py-3"
-                  >
-                    <p className="text-sm">{moment.content_text}</p>
-                    {moment.moment_timestamp ? (
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(moment.moment_timestamp).toLocaleString()}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="border border-black/5 bg-white/80 shadow-lg backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-xl">Highlights</CardTitle>
-              <CardDescription>
-                Pick 3-7 lines that define this journey.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HighlightsEditor />
-            </CardContent>
-          </Card>
-
-          <Card className="border border-black/5 bg-white/80 shadow-lg backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-xl">Media</CardTitle>
-              <CardDescription>
-                Upload photos or video clips to build the gallery.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <UploadDropzone tripId={trip.id} />
-              <MediaGallery
-                items={media.map((item) => ({
-                  id: item.id,
-                  mediaType: item.media_type,
-                  url: item.public_url ?? item.storage_path,
-                }))}
-              />
-            </CardContent>
-          </Card>
-
-          <SharePanel tripId={trip.id} />
-        </div>
-      </div>
     </div>
   );
 }

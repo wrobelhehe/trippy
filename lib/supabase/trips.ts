@@ -22,6 +22,11 @@ export type Trip = {
   deleted_at: string | null;
 };
 
+type TripCountRow = Trip & {
+  moments?: { count: number }[] | null;
+  trip_media?: { count: number }[] | null;
+};
+
 export type CreateTripInput = {
   title: string;
   placeName: string;
@@ -50,13 +55,31 @@ async function requireUserId() {
   return { supabase, userId: data.user.id };
 }
 
+function withTripCounts(row: TripCountRow): Trip {
+  const momentsCount = Array.isArray(row.moments)
+    ? row.moments[0]?.count ?? 0
+    : 0;
+  const mediaCount = Array.isArray(row.trip_media)
+    ? row.trip_media[0]?.count ?? 0
+    : 0;
+  const { moments, trip_media, ...trip } = row;
+  return {
+    ...trip,
+    moments_count: momentsCount,
+    media_count: mediaCount,
+  };
+}
+
 export async function listTrips({
   includeDeleted = false,
 }: {
   includeDeleted?: boolean;
 } = {}) {
   const { supabase, userId } = await requireUserId();
-  let query = supabase.from("trips").select("*").order("created_at", {
+  let query = supabase
+    .from("trips")
+    .select("*, moments(count), trip_media(count)")
+    .order("created_at", {
     ascending: false,
   });
   query = query.eq("owner_id", userId);
@@ -71,14 +94,14 @@ export async function listTrips({
     throw new Error(error.message);
   }
 
-  return (data ?? []) as Trip[];
+  return (data ?? []).map((row) => withTripCounts(row as TripCountRow));
 }
 
 export async function getTrip(tripId: string) {
   const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("trips")
-    .select("*")
+    .select("*, moments(count), trip_media(count)")
     .eq("id", tripId)
     .eq("owner_id", userId)
     .maybeSingle();
@@ -87,7 +110,7 @@ export async function getTrip(tripId: string) {
     throw new Error(error.message);
   }
 
-  return data as Trip | null;
+  return data ? withTripCounts(data as TripCountRow) : null;
 }
 
 export async function createTrip(input: CreateTripInput) {
