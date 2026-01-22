@@ -32,7 +32,6 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import {
@@ -162,12 +161,16 @@ function DashboardTile({
             "0 35px 90px -55px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08)";
           clone.style.filter = "saturate(1.02)";
           clone.querySelector("[data-drag-hint]")?.remove();
+          const pointerOffset = {
+            x: location.initial.input.clientX - rect.left,
+            y: location.initial.input.clientY - rect.top,
+          };
 
           setCustomNativeDragPreview({
             nativeSetDragImage,
-            getOffset: preserveOffsetOnSource({
-              element,
-              input: location.initial.input,
+            getOffset: () => ({
+              x: Math.max(0, Math.min(rect.width, pointerOffset.x)),
+              y: Math.max(0, Math.min(rect.height, pointerOffset.y)),
             }),
             render: ({ container }) => {
               container.style.width = `${rect.width}px`;
@@ -201,16 +204,16 @@ function DashboardTile({
       ref={ref}
       className={cn(
         "relative transition-[transform,opacity,box-shadow,outline-color,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
-        editMode && "rounded-3xl ring-1 ring-inset ring-white/10 bg-white/[0.02]",
+        editMode && "rounded-3xl ring-1 ring-inset ring-white/15 bg-white/[0.02]",
         editMode &&
           isDropTarget &&
-          "ring-2 ring-inset ring-emerald-400/80 bg-emerald-500/5 shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_18px_45px_-35px_rgba(16,185,129,0.85)]",
+          "ring-2 ring-inset ring-emerald-300/90 bg-emerald-500/10 shadow-[0_0_0_2px_rgba(16,185,129,0.45),0_18px_45px_-35px_rgba(16,185,129,0.85)]",
         editMode &&
           isDragging &&
           "opacity-80 scale-[0.98] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.7)]",
         editMode &&
           isFlash &&
-          "ring-2 ring-inset ring-emerald-300/90 shadow-[0_0_0_1px_rgba(52,211,153,0.4),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
+          "ring-2 ring-inset ring-emerald-300/95 shadow-[0_0_0_2px_rgba(52,211,153,0.5),0_24px_55px_-35px_rgba(16,185,129,0.9)]",
         editMode && "cursor-grab select-none active:cursor-grabbing transform-gpu will-change-transform"
       )}
       style={
