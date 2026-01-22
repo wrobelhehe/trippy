@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -10,8 +11,11 @@ import {
 } from "lucide-react";
 
 import { Shine } from "@/components/animate-ui/primitives/effects/shine";
-import { Tilt, TiltContent } from "@/components/animate-ui/primitives/effects/tilt";
-import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
+import {
+  PrivacyMixCard,
+  TripCadenceCard,
+} from "@/components/dashboard/DashboardCharts";
+import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +25,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { DashboardWidgetId } from "@/lib/dashboard/layout";
 import { listShareLinks } from "@/lib/share/share-links";
+import { getDashboardLayout } from "@/lib/supabase/dashboard-layout";
 import { listTrips } from "@/lib/supabase/trips";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +39,7 @@ const formatter = new Intl.DateTimeFormat("en-US", {
 
 const statMeta = [
   {
+    id: "stat-trips",
     label: "Trips",
     helper: "Total journeys",
     icon: MapPinned,
@@ -41,6 +48,7 @@ const statMeta = [
     shine: "rgba(59,211,199,0.45)",
   },
   {
+    id: "stat-countries",
     label: "Countries",
     helper: "Unique places",
     icon: Flag,
@@ -49,6 +57,7 @@ const statMeta = [
     shine: "rgba(243,161,95,0.45)",
   },
   {
+    id: "stat-moments",
     label: "Moments",
     helper: "Highlights logged",
     icon: NotebookPen,
@@ -57,6 +66,7 @@ const statMeta = [
     shine: "rgba(240,107,90,0.4)",
   },
   {
+    id: "stat-media",
     label: "Media",
     helper: "Files attached",
     icon: Image,
@@ -64,19 +74,49 @@ const statMeta = [
     panel: "bg-[linear-gradient(150deg,#0f172a,#0b0f14)]",
     shine: "rgba(255,255,255,0.35)",
   },
-];
+] as const;
 
-const statLayout = [
-  "sm:col-span-1 lg:col-span-3 xl:col-span-2",
-  "sm:col-span-1 lg:col-span-3 xl:col-span-3",
-  "sm:col-span-1 lg:col-span-3 xl:col-span-4",
-  "sm:col-span-1 lg:col-span-3 xl:col-span-3",
-];
+type StatMeta = (typeof statMeta)[number];
+
+function StatCard({ stat, value }: { stat: StatMeta; value: number }) {
+  const Icon = stat.icon;
+
+  return (
+    <div className="h-full">
+      <Shine asChild color={stat.shine} enableOnHover opacity={0.28}>
+        <Card
+          className={cn(
+            `h-full border border-white/10 ${stat.panel} shadow-md backdrop-blur`,
+            "transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]"
+          )}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm uppercase tracking-[0.3em] text-white/60">
+                {stat.label}
+              </CardTitle>
+              <div className={`rounded-full bg-white/5 p-2 ${stat.tone}`}>
+                <Icon className="size-4" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-white">{value}</p>
+              <p className="text-xs text-muted-foreground">{stat.helper}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </Shine>
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
-  const [trips, shareLinks] = await Promise.all([
+  const [trips, shareLinks, layout] = await Promise.all([
     listTrips(),
     listShareLinks(),
+    getDashboardLayout(),
   ]);
   const now = new Date();
   const totalTrips = trips.length;
@@ -99,9 +139,17 @@ export default async function DashboardPage() {
   );
 
   const privacyChartData = [
-    { mode: "private", value: privacyCounts.private, fill: "var(--color-private)" },
+    {
+      mode: "private",
+      value: privacyCounts.private,
+      fill: "var(--color-private)",
+    },
     { mode: "link", value: privacyCounts.link, fill: "var(--color-link)" },
-    { mode: "public", value: privacyCounts.public, fill: "var(--color-public)" },
+    {
+      mode: "public",
+      value: privacyCounts.public,
+      fill: "var(--color-public)",
+    },
   ];
 
   const windowStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -148,63 +196,19 @@ export default async function DashboardPage() {
   const tripsNeedingAttention =
     tripsMissingMoments.length + tripsMissingMedia.length;
 
-  return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-12 lg:auto-rows-min lg:grid-flow-dense">
-      {statMeta.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <Tilt
-            key={stat.label}
-            maxTilt={8}
-            className={cn("h-full", statLayout[index])}
-          >
-            <TiltContent className="h-full">
-              <Shine
-                asChild
-                color={stat.shine}
-                enableOnHover
-                opacity={0.28}
-              >
-                <Card
-                  className={cn(
-                    `h-full border border-white/10 ${stat.panel} shadow-md backdrop-blur`,
-                    "transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]"
-                  )}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm uppercase tracking-[0.3em] text-white/60">
-                        {stat.label}
-                      </CardTitle>
-                      <div className={`rounded-full bg-white/5 p-2 ${stat.tone}`}>
-                        <Icon className="size-4" />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-1">
-                      <p className="text-3xl font-semibold text-white">
-                        {statValues[index]}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {stat.helper}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Shine>
-            </TiltContent>
-          </Tilt>
-        );
-      })}
-
+  const widgets: Record<DashboardWidgetId, ReactNode> = {
+    "stat-trips": <StatCard stat={statMeta[0]} value={statValues[0]} />,
+    "stat-countries": <StatCard stat={statMeta[1]} value={statValues[1]} />,
+    "stat-moments": <StatCard stat={statMeta[2]} value={statValues[2]} />,
+    "stat-media": <StatCard stat={statMeta[3]} value={statValues[3]} />,
+    "hero-overview": (
       <Shine
         asChild
         color="rgba(255,255,255,0.35)"
         opacity={0.22}
         enableOnHover
       >
-        <Card className="sm:col-span-2 lg:col-span-7 xl:col-span-7 border border-white/10 bg-[color:var(--panel)]/90 shadow-[0_30px_80px_rgba(0,0,0,0.4)] backdrop-blur">
+        <Card className="border border-white/10 bg-[color:var(--panel)]/90 shadow-[0_30px_80px_rgba(0,0,0,0.4)] backdrop-blur">
           <CardHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border border-white/10 bg-white/5 text-xs uppercase tracking-[0.24em] text-white/70">
@@ -291,19 +295,25 @@ export default async function DashboardPage() {
                 </p>
                 <div className="mt-4 space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Trips missing moments</span>
+                    <span className="text-muted-foreground">
+                      Trips missing moments
+                    </span>
                     <span className="font-semibold text-white">
                       {tripsMissingMoments.length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Trips missing media</span>
+                    <span className="text-muted-foreground">
+                      Trips missing media
+                    </span>
                     <span className="font-semibold text-white">
                       {tripsMissingMedia.length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Active share links</span>
+                    <span className="text-muted-foreground">
+                      Active share links
+                    </span>
                     <span className="font-semibold text-white">
                       {activeShareLinks.length}
                     </span>
@@ -321,8 +331,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </Shine>
-
-      <Card className="sm:col-span-2 lg:col-span-5 xl:col-span-5 border border-white/10 bg-[color:var(--panel-2)]/85 shadow-lg backdrop-blur">
+    ),
+    "recent-trips": (
+      <Card className="border border-white/10 bg-[color:var(--panel-2)]/85 shadow-lg backdrop-blur">
         <CardHeader>
           <CardTitle className="text-xl">Recent trips</CardTitle>
           <CardDescription>
@@ -360,17 +371,15 @@ export default async function DashboardPage() {
           </Button>
         </CardContent>
       </Card>
-
-      <DashboardCharts
-        tripsByMonth={tripsByMonth}
-        privacyChartData={privacyChartData}
-        hasTrips={hasTrips}
-        className="sm:col-span-2 lg:col-span-12 lg:grid-cols-12"
-        tripCardClassName="lg:col-span-7 xl:col-span-8"
-        privacyCardClassName="lg:col-span-5 xl:col-span-4"
-      />
-
-      <Card className="sm:col-span-2 lg:col-span-12 border border-white/10 bg-[linear-gradient(150deg,rgba(59,211,199,0.12),rgba(10,15,20,0.9))] shadow-lg backdrop-blur">
+    ),
+    "trip-cadence": (
+      <TripCadenceCard tripsByMonth={tripsByMonth} hasTrips={hasTrips} />
+    ),
+    "privacy-mix": (
+      <PrivacyMixCard privacyChartData={privacyChartData} hasTrips={hasTrips} />
+    ),
+    "archive-focus": (
+      <Card className="border border-white/10 bg-[linear-gradient(150deg,rgba(59,211,199,0.12),rgba(10,15,20,0.9))] shadow-lg backdrop-blur">
         <CardHeader>
           <CardTitle className="text-lg">Archive focus</CardTitle>
           <CardDescription>
@@ -407,6 +416,8 @@ export default async function DashboardPage() {
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
+    ),
+  };
+
+  return <EditableDashboard initialLayout={layout} widgets={widgets} />;
 }
