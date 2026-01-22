@@ -11,7 +11,7 @@ Deliver a memory-first travel album built on Next.js App Router with Supabase (A
 
 **Language/Version**: TypeScript 5.x, Next.js 16.1.4, React 19.2.3, Node.js 20.x (Vercel runtime)  
 **Primary Dependencies**: Next.js App Router, Supabase JS/Auth/Storage, Stripe SDK, shadcn/ui + Radix + Tailwind, three.js + @react-three/fiber, Sentry  
-**Storage**: Supabase Postgres + Supabase Storage (private user-media, public share-assets)  
+**Storage**: Supabase Postgres + Supabase Storage (private user-media)  
 **Testing**: Vitest + React Testing Library (unit/integration), Playwright (E2E)  
 **Target Platform**: Web-only, Vercel deployments (preview/dev/prod)  
 **Project Type**: Web app (Next.js App Router with route handlers + Edge Functions)  
@@ -105,6 +105,5 @@ Artifacts:
 3. Dashboard 3D globe (client-rendered, perf instrumentation).
 4. Share links + public pages + privacy redactions + rate limiting.
 5. Stripe billing + entitlements + paywall gates.
-6. Share Studio asset generation + storage + management.
-7. AI jobs + Gemini integration + queue runner + cost controls.
-8. Hardening: observability, security review, perf budgets, and CI gates.
+6. AI jobs + Gemini integration + queue runner + cost controls.
+7. Hardening: observability, security review, perf budgets, and CI gates.

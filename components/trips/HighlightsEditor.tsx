@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 export function HighlightsEditor({
   value,
   onChange,
+  showHeader = true,
 }: {
   value?: string[];
   onChange?: (items: string[]) => void;
+  showHeader?: boolean;
 }) {
   const getInitialItems = (input?: string[]) => {
     if (input && input.length >= 3) {
@@ -51,12 +53,14 @@ export function HighlightsEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label>Trip highlights</Label>
-        <span className="text-xs text-muted-foreground">
-          {items.length}/7 highlights
-        </span>
-      </div>
+      {showHeader ? (
+        <div className="flex items-center justify-between">
+          <Label>Trip highlights</Label>
+          <span className="text-xs text-muted-foreground">
+            {items.length}/7 highlights
+          </span>
+        </div>
+      ) : null}
       <div className="space-y-3">
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
@@ -65,15 +69,16 @@ export function HighlightsEditor({
               onChange={(event) => updateItem(index, event.target.value)}
               placeholder={`Highlight ${index + 1}`}
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => removeItem(index)}
-              disabled={items.length <= 3}
-            >
-              -
-            </Button>
+            {items.length > 3 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => removeItem(index)}
+              >
+                -
+              </Button>
+            ) : null}
           </div>
         ))}
       </div>

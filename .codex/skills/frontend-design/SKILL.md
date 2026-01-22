@@ -40,3 +40,18 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+## Shadcn-First Implementation
+
+Default to shadcn/ui for layout and UI primitives. Use shadcn MCP tools to discover, add, and reference components and blocks instead of hand-rolling UI.
+
+- Use `mcp__shadcn__get_project_registries` to confirm registries.
+- Use `mcp__shadcn__search_items_in_registries` to find components/blocks.
+- Use `mcp__shadcn__get_item_examples_from_registries` for ready-made blocks/demos.
+- Use `mcp__shadcn__get_add_command_for_items` and run the add command to install missing components.
+
+Only write custom UI when there is no suitable shadcn component or block.
+
+## Service MCP Execution
+
+If implementing functionality that touches Supabase, Stripe, GitHub, or Vercel, create/update the matching resources in those services via their MCP tools during the same change set (ask for missing IDs/config before executing).

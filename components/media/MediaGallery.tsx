@@ -1,4 +1,7 @@
+import { Image } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type MediaItem = {
   id: string;
@@ -9,9 +12,11 @@ export type MediaItem = {
 export function MediaGallery({ items }: { items: MediaItem[] }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-6 text-sm text-muted-foreground">
-        No media yet. Upload a photo or video to start the gallery.
-      </div>
+      <EmptyState
+        icon={Image}
+        title="No media yet"
+        description="Upload a photo or video to start the gallery."
+      />
     );
   }
 
@@ -20,7 +25,7 @@ export function MediaGallery({ items }: { items: MediaItem[] }) {
       {items.map((item) => (
         <Card
           key={item.id}
-          className="relative overflow-hidden border border-black/5 bg-white/70"
+          className="group relative overflow-hidden border border-white/10 bg-[color:var(--panel-2)]/80 shadow-[0_18px_40px_rgba(0,0,0,0.25)] transition duration-300 hover:border-white/20"
         >
           <div className="aspect-[4/3] w-full bg-muted">
             {item.url ? (
@@ -34,7 +39,7 @@ export function MediaGallery({ items }: { items: MediaItem[] }) {
                 <img
                   src={item.url}
                   alt="Trip media"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                 />
               )
             ) : (
@@ -43,6 +48,7 @@ export function MediaGallery({ items }: { items: MediaItem[] }) {
               </div>
             )}
           </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
         </Card>
       ))}
     </div>

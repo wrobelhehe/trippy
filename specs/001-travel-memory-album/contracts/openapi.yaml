@@ -66,16 +66,6 @@ components:
         expiresAt: { type: string, format: date-time, nullable: true }
         revokedAt: { type: string, format: date-time, nullable: true }
         privacyOverrides: { type: object }
-    ShareAsset:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        scope: { type: string, enum: [trip, profile] }
-        tripId: { type: string, format: uuid, nullable: true }
-        assetType: { type: string, enum: [story, square, widget] }
-        templateKey: { type: string }
-        url: { type: string }
-        createdAt: { type: string, format: date-time }
     AIJob:
       type: object
       properties:
@@ -299,23 +289,6 @@ paths:
       responses:
         "200":
           description: OK
-
-  /api/share-assets:
-    get:
-      security: [{ bearerAuth: [] }]
-      summary: List generated share assets
-      responses:
-        "200":
-          description: OK
-    post:
-      security: [{ bearerAuth: [] }]
-      summary: Generate share asset
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ShareAsset" }
 
   /api/ai-jobs:
     get:

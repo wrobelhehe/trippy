@@ -132,71 +132,49 @@
 
 ### Tests for User Story 3 (REQUIRED)
 
-- [ ] T066 [P] [US3] Contract test for share payload endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/share-payload.spec.ts
-- [ ] T067 [P] [US3] Integration test for guest share view in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/share-guest.spec.ts
-- [ ] T068 [P] [US3] E2E test for public share pages in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/share-guest.spec.ts
+- [X] T066 [P] [US3] Contract test for share payload endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/share-payload.spec.ts
+- [X] T067 [P] [US3] Integration test for guest share view in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/share-guest.spec.ts
+- [X] T068 [P] [US3] E2E test for public share pages in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/share-guest.spec.ts
 
 ### Implementation for User Story 3
 
-- [ ] T069 [P] [US3] Implement share payload sanitizer in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/serializer.ts
-- [ ] T070 [P] [US3] Implement share rate limiting helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/rate-limit.ts
-- [ ] T071 [US3] Implement share payload endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share/[token]/route.ts
-- [ ] T072 [US3] Implement public trip share page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/s/trip/[token]/page.tsx
-- [ ] T073 [US3] Implement public profile share page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/s/profile/[token]/page.tsx
-- [ ] T074 [P] [US3] Build shared media gallery in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/SharedMediaGallery.tsx
-- [ ] T075 [P] [US3] Build share error/empty state UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareErrorState.tsx
+- [X] T069 [P] [US3] Implement share payload sanitizer in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/serializer.ts
+- [X] T070 [P] [US3] Implement share rate limiting helper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/rate-limit.ts
+- [X] T071 [US3] Implement share payload endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share/[token]/route.ts
+- [X] T072 [US3] Implement public trip share page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/s/trip/[token]/page.tsx
+- [X] T073 [US3] Implement public profile share page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/s/profile/[token]/page.tsx
+- [X] T074 [P] [US3] Build shared media gallery in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/SharedMediaGallery.tsx
+- [X] T075 [P] [US3] Build share error/empty state UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareErrorState.tsx
 
 ---
 
-## Phase 6: User Story 4 - Generate premium share assets (Priority: P3)
-
-**Goal**: Owners can generate IG Story, square post, and widget assets within plan limits.
-
-**Independent Test**: Generate assets for a trip under free and premium entitlements.
-
-### Tests for User Story 4 (REQUIRED)
-
-- [ ] T076 [P] [US4] Contract test for share assets endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/share-assets.spec.ts
-- [ ] T077 [P] [US4] Integration test for asset generation gating in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/share-assets.spec.ts
-
-### Implementation for User Story 4
-
-- [ ] T078 [P] [US4] Implement share asset templates in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/templates/index.ts
-- [ ] T079 [P] [US4] Implement asset generator service in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/assets.ts
-- [ ] T080 [US4] Implement share assets endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/share-assets/route.ts
-- [ ] T081 [US4] Implement Share Studio page in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/(app)/share-studio/page.tsx
-- [ ] T082 [US4] Implement Share Studio UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/share/ShareStudio.tsx
-- [ ] T083 [P] [US4] Implement share assets data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/share/share-assets.ts
-
----
-
-## Phase 7: User Story 5 - Use AI-assisted memory tools (Priority: P3)
+## Phase 6: User Story 4 - Use AI-assisted memory tools (Priority: P3)
 
 **Goal**: Premium owners can create AI draft trips or ticket imports with privacy-safe outputs.
 
 **Independent Test**: Start an AI job, observe status, review draft, and confirm safe fields.
 
-### Tests for User Story 5 (REQUIRED)
+### Tests for User Story 4 (REQUIRED)
 
-- [ ] T084 [P] [US5] Contract test for AI jobs endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/ai-jobs.spec.ts
-- [ ] T085 [P] [US5] Integration test for AI job lifecycle in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/ai-jobs.spec.ts
-- [ ] T086 [P] [US5] E2E test for AI draft flow in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/ai-jobs.spec.ts
+- [ ] T084 [P] [US4] Contract test for AI jobs endpoints in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/contract/ai-jobs.spec.ts
+- [ ] T085 [P] [US4] Integration test for AI job lifecycle in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/integration/ai-jobs.spec.ts
+- [ ] T086 [P] [US4] E2E test for AI draft flow in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/tests/e2e/ai-jobs.spec.ts
 
-### Implementation for User Story 5
+### Implementation for User Story 4
 
-- [ ] T087 [P] [US5] Implement Gemini client wrapper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/ai/gemini.ts
-- [ ] T088 [P] [US5] Implement AI jobs data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/ai/jobs.ts
-- [ ] T089 [US5] Implement AI jobs endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/route.ts
-- [ ] T090 [US5] Implement AI job status endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/[jobId]/route.ts
-- [ ] T091 [US5] Implement AI job retry endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/[jobId]/retry/route.ts
-- [ ] T092 [US5] Implement AI job runner Edge Function in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/functions/ai-job-runner/index.ts
-- [ ] T093 [P] [US5] Build AI job launcher UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/AiJobLauncher.tsx
-- [ ] T094 [P] [US5] Build AI trip draft review UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/TripDraftReview.tsx
-- [ ] T095 [P] [US5] Build ticket import UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/TicketImport.tsx
+- [ ] T087 [P] [US4] Implement Gemini client wrapper in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/ai/gemini.ts
+- [ ] T088 [P] [US4] Implement AI jobs data access in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/lib/ai/jobs.ts
+- [ ] T089 [US4] Implement AI jobs endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/route.ts
+- [ ] T090 [US4] Implement AI job status endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/[jobId]/route.ts
+- [ ] T091 [US4] Implement AI job retry endpoint in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/app/api/ai-jobs/[jobId]/retry/route.ts
+- [ ] T092 [US4] Implement AI job runner Edge Function in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/supabase/functions/ai-job-runner/index.ts
+- [ ] T093 [P] [US4] Build AI job launcher UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/AiJobLauncher.tsx
+- [ ] T094 [P] [US4] Build AI trip draft review UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/TripDraftReview.tsx
+- [ ] T095 [P] [US4] Build ticket import UI in /mnt/c/Users/wiktor/desktop/Trippy.io web/trippy/components/ai/TicketImport.tsx
 
 ---
 
-## Phase 8: Polish & Cross-Cutting Concerns
+## Phase 7: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
@@ -219,7 +197,7 @@
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
 - **User Stories (Phase 3+)**: Depend on Foundational completion
-- **Polish (Phase 8)**: Depends on all desired user stories being complete
+- **Polish (Phase 7)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
@@ -227,7 +205,6 @@
 - **US2 (P2)**: No dependencies on other stories
 - **US3 (P2)**: Depends on US2 for share link creation and token format
 - **US4 (P3)**: Depends on US1 and entitlements (Phase 2)
-- **US5 (P3)**: Depends on US1 and entitlements (Phase 2)
 
 ---
 
@@ -261,13 +238,6 @@ T074 + T075
 ### User Story 4
 
 ```text
-T076 + T077
-T078 + T079 + T083
-```
-
-### User Story 5
-
-```text
 T084 + T085 + T086
 T087 + T088
 T093 + T094 + T095
@@ -289,5 +259,5 @@ T093 + T094 + T095
 1. Setup + Foundational
 2. US1 → Test → Deploy/Demo
 3. US2 + US3 → Test → Deploy/Demo
-4. US4 + US5 → Test → Deploy/Demo
+4. US4 → Test → Deploy/Demo
 5. Polish & cross-cutting checks

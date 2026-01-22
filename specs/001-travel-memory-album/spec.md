@@ -3,7 +3,7 @@
 **Feature Branch**: `001-travel-memory-album`  
 **Created**: 2026-01-20  
 **Status**: Draft  
-**Input**: User description: "Build a production-grade web application that functions as a Travel Album + Travel Diary (memories-first), explicitly NOT a trip planner. The product helps users capture and revisit past travel memories (photos, videos, diary moments, and highlights) and share them in a premium, privacy-first way via read-only links and one-click sharing assets (IG Story + embeddable widgets). The experience must feel premium (glass design, performance, fast media browsing). It is a memory album/diary for past trips only, with no planning, booking, schedules, or future trip language. Core objects include Profile, Trip, Moment, Media, Highlights, Share Links, and AI Jobs. Key modules: auth, globe dashboard, trips, sharing, share studio, subscriptions, and premium AI features." 
+**Input**: User description: "Build a production-grade web application that functions as a Travel Album + Travel Diary (memories-first), explicitly NOT a trip planner. The product helps users capture and revisit past travel memories (photos, videos, diary moments, and highlights) and share them in a premium, privacy-first way via read-only links. The experience must feel premium (glass design, performance, fast media browsing). It is a memory album/diary for past trips only, with no planning, booking, schedules, or future trip language. Core objects include Profile, Trip, Moment, Media, Highlights, Share Links, and AI Jobs. Key modules: auth, globe dashboard, trips, sharing, subscriptions, and premium AI features." 
 
 ## Clarifications
 
@@ -62,22 +62,7 @@ As a guest without an account, I open a shared trip or profile link and view onl
 
 ---
 
-### User Story 4 - Generate premium share assets (Priority: P3)
-
-As an owner, I generate designed assets (IG Story, square post, embed widget) from a trip or profile, with plan-based limits.
-
-**Why this priority**: Premium share assets are a differentiator and a key upgrade driver.
-
-**Independent Test**: Can be fully tested by generating assets for one trip under free and premium entitlements.
-
-**Acceptance Scenarios**:
-
-1. **Given** a premium account, **When** the owner generates an IG Story asset, **Then** the asset is saved and reusable without watermark.
-2. **Given** a free account at its export limit, **When** the owner attempts another export, **Then** they see an upgrade CTA and no asset is created.
-
----
-
-### User Story 5 - Use AI-assisted memory tools (Priority: P3)
+### User Story 4 - Use AI-assisted memory tools (Priority: P3)
 
 As a premium owner, I can create a draft trip from photos or import a ticket image to enrich a trip without exposing sensitive details.
 
@@ -94,7 +79,7 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 
 ### Edge Cases
 
-- What happens when a free user exceeds per-trip media limits or export limits?
+- What happens when a free user exceeds per-trip media limits?
 - How does the system handle a share link that is revoked or rotated while a guest is viewing it?
 - What happens when a trip has no dates or no moments?
 - How does the system handle corrupt or oversized media uploads?
@@ -109,9 +94,10 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **FR-001**: System MUST support account creation and sign-in with Google sign-in and email + password, including email verification and password reset.
 - **FR-002**: System MUST require authenticated sessions for all owner features; guests may access content only via share links.
 - **FR-003**: System MUST provide onboarding to set display name, with optional avatar and bio, and a path to create the first trip (manual or AI based on plan).
-- **FR-004**: Dashboard MUST display a 3D globe with trip pins supporting rotate, zoom, inertia, pin click to open trip, and hover mini-card details (title, place, dates per privacy, cover thumbnail, moment count).
+- **FR-004**: Globe experience MUST live on a dedicated `/globe` route and display a 3D globe with trip pins supporting rotate, zoom, inertia, pin click to open trip, and hover mini-card details (title, place, dates per privacy, cover thumbnail, moment count).
+- **FR-004b**: Dashboard MUST surface a summary of globe activity with stats and a clear path to `/globe`.
 - **FR-005**: Dashboard MUST show stats for total trips, unique countries, total moments, and newest trip.
-- **FR-006**: Navigation MUST include Dashboard, Trips, Share Studio, Settings, Billing/Premium, plus a user menu for profile, billing, and logout.
+- **FR-006**: Navigation MUST include Dashboard, Trips, Settings, Billing/Premium, plus a user menu for profile, billing, and logout.
 - **FR-007**: Users MUST be able to create trips with title, place, optional dates, cover, tags, and a privacy setting.
 - **FR-008**: Users MUST be able to edit trip metadata and highlights (3-7 items), and delete trips with explicit confirmation; deleted trips are soft-deleted to Trash for 30 days, share links revoked immediately, and owners can restore during the retention window.
 - **FR-009**: Users MUST be able to add, edit, and delete moments with text, optional media, optional location, and timestamp or manual order.
@@ -125,8 +111,7 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **FR-014a**: Share links MUST default to view-only media; owners can enable downloads per link.
 - **FR-015**: Privacy redactions MUST support hiding exact dates (month/year or hidden), hiding sensitive ticket details, and hiding internal metadata and costs.
 - **FR-016**: Public share routes MUST be `/s/trip/[token]` and `/s/profile/[token]` and return safe error states for invalid or revoked tokens.
-- **FR-017**: Share Studio MUST generate IG Story (9:16), square post (1:1), and embeddable widget assets for trips or profiles; assets are saved and reusable.
-- **FR-018**: Plan entitlements MUST enforce media limits, AI access, template access, export limits, and watermark rules, with clear upgrade CTAs at gating points.
+- **FR-018**: Plan entitlements MUST enforce media limits and AI access, with clear upgrade CTAs at gating points.
 - **FR-019**: AI jobs MUST allow premium users to draft trips from photo batches and import ticket images, with visible progress and a review step before publishing.
 - **FR-020**: Sensitive AI-extracted ticket fields MUST be hidden by default in all share views; only safe highlights are shown.
 - **FR-021**: System MUST record audit events for share link create/revoke, subscription status changes, and AI job lifecycle; critical errors MUST be observable.
@@ -139,7 +124,7 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **UX-001**: UI MUST present a premium, glass-inspired experience with clear hierarchy and readable contrast.
 - **UX-002**: All copy and labels MUST be memory-first and past-trip oriented; no planning or future-trip language is permitted.
 - **UX-003**: Each primary screen MUST have a single primary call to action, and fast moment creation uses a modal or bottom sheet.
-- **UX-004**: All core flows MUST include loading, empty, and error states (globe, trips, media, share, AI jobs, assets).
+- **UX-004**: All core flows MUST include loading, empty, and error states (globe, trips, media, share, AI jobs).
 - **UX-005**: Accessibility MUST include keyboard navigation, visible focus, ARIA for interactive elements, and adequate contrast.
 
 ### Performance Requirements
@@ -157,9 +142,8 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **Media**: Owner-scoped photo or video with thumbnails, metadata, and references to one or more trips or moments.
 - **Highlight**: Short curated bullet for a trip, including optional route-style highlight from ticket import.
 - **ShareLink**: Tokenized link with scope (trip or profile), redaction settings, status, and rotation history.
-- **ShareAsset**: Generated asset (story, post, widget) tied to a trip or profile, with template and watermark rules.
 - **AIJob**: Background analysis task with type, status, input batch, draft outputs, and review state.
-- **Entitlement**: Plan rules for limits, AI access, template access, and export rights.
+- **Entitlement**: Plan rules for limits and AI access.
 
 ### Assumptions
 
@@ -184,4 +168,3 @@ As a premium owner, I can create a draft trip from photos or import a ticket ima
 - **SC-003**: Globe interactions sustain 55+ fps with 200 trips and 500 moments on reference devices in lab tests.
 - **SC-004**: 100% of attempts to exceed free plan limits are blocked with an upgrade CTA, and 0% of premium entitlements are blocked incorrectly in tests.
 - **SC-005**: 90% of guests can view a shared trip/profile without errors and see only redacted content specified by link settings.
-- **SC-006**: 80% of users who generate share assets complete export without support tickets or manual intervention.
