@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { Shine } from "@/components/animate-ui/primitives/effects/shine";
-import { Tilt, TiltContent } from "@/components/animate-ui/primitives/effects/tilt";
 import {
   PrivacyMixCard,
   TripCadenceCard,
@@ -83,35 +82,33 @@ function StatCard({ stat, value }: { stat: StatMeta; value: number }) {
   const Icon = stat.icon;
 
   return (
-    <Tilt maxTilt={8} className="h-full">
-      <TiltContent className="h-full">
-        <Shine asChild color={stat.shine} enableOnHover opacity={0.28}>
-          <Card
-            className={cn(
-              `h-full border border-white/10 ${stat.panel} shadow-md backdrop-blur`,
-              "transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]"
-            )}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm uppercase tracking-[0.3em] text-white/60">
-                  {stat.label}
-                </CardTitle>
-                <div className={`rounded-full bg-white/5 p-2 ${stat.tone}`}>
-                  <Icon className="size-4" />
-                </div>
+    <div className="h-full">
+      <Shine asChild color={stat.shine} enableOnHover opacity={0.28}>
+        <Card
+          className={cn(
+            `h-full border border-white/10 ${stat.panel} shadow-md backdrop-blur`,
+            "transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]"
+          )}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm uppercase tracking-[0.3em] text-white/60">
+                {stat.label}
+              </CardTitle>
+              <div className={`rounded-full bg-white/5 p-2 ${stat.tone}`}>
+                <Icon className="size-4" />
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-1">
-                <p className="text-3xl font-semibold text-white">{value}</p>
-                <p className="text-xs text-muted-foreground">{stat.helper}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Shine>
-      </TiltContent>
-    </Tilt>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-white">{value}</p>
+              <p className="text-xs text-muted-foreground">{stat.helper}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </Shine>
+    </div>
   );
 }
 
