@@ -2,15 +2,9 @@
 
 import { type CSSProperties, type ReactNode, useMemo, useState, useTransition } from "react";
 import {
-  ArrowDown,
   ArrowUp,
-  ChevronDown,
-  ChevronUp,
-  EyeOff,
   GripVertical,
   LayoutGrid,
-  Maximize2,
-  Minimize2,
   Plus,
   RotateCcw,
   Save,
@@ -22,7 +16,6 @@ import { Shine } from "@/components/animate-ui/primitives/effects/shine";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -32,7 +25,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DASHBOARD_WIDGETS,
   DEFAULT_DASHBOARD_LAYOUT,
@@ -84,7 +76,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
     [activeLayout]
   );
   const visibleLayout = orderedLayout.filter((item) => item.visible);
-  const canHideWidgets = visibleLayout.length > 1;
   const layoutById = useMemo(() => getLayoutById(activeLayout), [activeLayout]);
 
   const draftSignature = useMemo(
@@ -131,24 +122,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
     });
   };
 
-  const moveWidget = (widgetId: DashboardWidgetId, direction: "up" | "down") => {
-    setDraftLayout((prev) => {
-      const visible = prev.filter((item) => item.visible);
-      const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
-      const currentIndex = order.indexOf(widgetId);
-      if (currentIndex === -1) return prev;
-      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= order.length) return prev;
-      const nextOrder = [...order];
-      nextOrder.splice(currentIndex, 1);
-      nextOrder.splice(targetIndex, 0, widgetId);
-      const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
-      return prev.map((item) =>
-        orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
-      );
-    });
-  };
-
   const handleToggleWidget = (
     widgetId: DashboardWidgetId,
     nextVisible: boolean
@@ -169,28 +142,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
         };
       });
     });
-  };
-
-  const adjustSpan = (
-    widgetId: DashboardWidgetId,
-    axis: "colSpan" | "rowSpan",
-    delta: number
-  ) => {
-    const widgetMeta = DASHBOARD_WIDGETS.find((widget) => widget.id === widgetId);
-    if (!widgetMeta) return;
-    setDraftLayout((prev) =>
-      prev.map((item) => {
-        if (item.id !== widgetId) return item;
-        const min =
-          axis === "colSpan" ? widgetMeta.minColSpan : widgetMeta.minRowSpan;
-        const max =
-          axis === "colSpan" ? widgetMeta.maxColSpan : widgetMeta.maxRowSpan;
-        return {
-          ...item,
-          [axis]: Math.min(Math.max(item[axis] + delta, min), max),
-        };
-      })
-    );
   };
 
   const handleSave = () => {
@@ -291,17 +242,12 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                   </CardTitle>
                   <CardDescription className="text-base text-white/70">
                     Arrange the tiles around what matters most. Edit mode lets you
-                    drag, resize, and decide which widgets should stay front and
-                    center.
+                    drag and decide which widgets should stay front and center.
                   </CardDescription>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
                       <GripVertical className="size-3 text-white/70" />
-                      Drag handles to reorder
-                    </div>
-                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      <Maximize2 className="size-3 text-white/70" />
-                      Resize width & height
+                      Drag tiles to reorder
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
                       <LayoutGrid className="size-3 text-white/70" />
@@ -319,8 +265,8 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                       Prioritize the tiles that keep you moving.
                     </li>
                     <li className="flex items-center gap-2">
-                      <ArrowDown className="size-4 text-sky-300" />
-                      Minimize sections you rarely visit.
+                      <LayoutGrid className="size-4 text-sky-300" />
+                      Show only the widgets you care about.
                     </li>
                     <li className="flex items-center gap-2">
                       <Plus className="size-4 text-amber-300" />
@@ -336,7 +282,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                   <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                     Editing
                   </span>
-                  <span>Drag tiles, resize, or open the widget library.</span>
+                  <span>Drag tiles or open the widget library.</span>
                 </div>
                 <Sheet open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
                   <SheetTrigger asChild>
@@ -349,7 +295,7 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                     <SheetHeader>
                       <SheetTitle>Widget library</SheetTitle>
                       <SheetDescription className="text-white/60">
-                        Add, hide, or rebalance tiles. Use arrows for quick ordering on mobile.
+                        Add or hide tiles to keep the view focused.
                       </SheetDescription>
                     </SheetHeader>
                     <div className="mt-6 grid gap-4">
@@ -357,12 +303,6 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                         const layoutItem = layoutById.get(widget.id);
                         const isVisible = layoutItem?.visible ?? true;
                         const isLastVisible = isVisible && visibleLayout.length <= 1;
-                        const visibleIndex = visibleLayout.findIndex(
-                          (item) => item.id === widget.id
-                        );
-                        const isFirstVisible = visibleIndex <= 0;
-                        const isLastVisibleOrder =
-                          visibleIndex === visibleLayout.length - 1;
                         return (
                           <div
                             key={widget.id}
@@ -385,41 +325,11 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                                 }
                               />
                             </div>
-                            {isVisible ? (
-                              <div className="mt-4 flex items-center justify-between">
-                                <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
-                                  Order
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                                    onClick={() => moveWidget(widget.id, "up")}
-                                    disabled={isFirstVisible || isLastVisible}
-                                    aria-label={`Move ${widget.title} up`}
-                                  >
-                                    <ChevronUp className="size-4" />
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                                    onClick={() => moveWidget(widget.id, "down")}
-                                    disabled={isLastVisibleOrder || isLastVisible}
-                                    aria-label={`Move ${widget.title} down`}
-                                  >
-                                    <ChevronDown className="size-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
+                            {!isVisible ? (
                               <p className="mt-4 text-xs text-white/45">
                                 Hidden from dashboard. Toggle on to place it.
                               </p>
-                            )}
+                            ) : null}
                           </div>
                         );
                       })}
@@ -440,23 +350,18 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
           const node = widgetMap.get(item.id);
           const meta = DASHBOARD_WIDGETS.find((widget) => widget.id === item.id);
           if (!node) return null;
-          const isDropTarget = dropTargetId === item.id;
-          const minColSpan = meta?.minColSpan ?? 1;
-          const maxColSpan = meta?.maxColSpan ?? 12;
-          const minRowSpan = meta?.minRowSpan ?? 1;
-          const maxRowSpan = meta?.maxRowSpan ?? 4;
-          const canShrinkWidth = item.colSpan > minColSpan;
-          const canExpandWidth = item.colSpan < maxColSpan;
-          const canShrinkHeight = item.rowSpan > minRowSpan;
-          const canExpandHeight = item.rowSpan < maxRowSpan;
+          const isDropTarget = dropTargetId === item.id && draggingId !== item.id;
+          const isDragging = draggingId === item.id;
+          const showDropHint = Boolean(draggingId) && draggingId !== item.id;
 
           return (
             <div
               key={item.id}
               className={cn(
-                "relative lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
+                "relative transition-all duration-200 lg:[grid-column:span_var(--col-span)_/_span_var(--col-span)] lg:[grid-row:span_var(--row-span)_/_span_var(--row-span)]",
                 editMode && "rounded-3xl outline outline-1 outline-white/10",
-                editMode && isDropTarget && "outline-2 outline-emerald-400/60"
+                editMode && isDropTarget && "outline-2 outline-emerald-400/70",
+                editMode && isDragging && "opacity-70"
               )}
               style={
                 {
@@ -486,11 +391,25 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                 setDropTargetId(null);
               }}
             >
+              {editMode && showDropHint ? (
+                <div
+                  className={cn(
+                    "pointer-events-none absolute inset-2 rounded-3xl border border-dashed border-white/10 transition-all duration-200",
+                    isDropTarget && "border-emerald-400/70 bg-emerald-500/10"
+                  )}
+                >
+                  {isDropTarget ? (
+                    <span className="absolute left-4 top-3 text-[10px] uppercase tracking-[0.32em] text-emerald-100/80">
+                      Drop to place
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
               {editMode ? (
                 <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-[#10151d]/90 px-3 py-1 text-xs text-white/70 shadow-lg">
                   <button
                     type="button"
-                    className="flex items-center gap-1 text-white/80"
+                    className="flex items-center gap-1 text-white/80 cursor-grab active:cursor-grabbing touch-none"
                     draggable
                     onDragStart={(event) => {
                       event.dataTransfer.setData("text/plain", item.id);
@@ -510,91 +429,10 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                   ) : null}
                 </div>
               ) : null}
-              {editMode ? (
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-white/10 bg-[#10151d]/90 px-2 py-1 text-xs text-white/70 shadow-lg">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => adjustSpan(item.id, "colSpan", -1)}
-                        disabled={!canShrinkWidth}
-                      >
-                        <Minimize2 className="size-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Reduce width</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => adjustSpan(item.id, "colSpan", 1)}
-                        disabled={!canExpandWidth}
-                      >
-                        <Maximize2 className="size-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Expand width</TooltipContent>
-                  </Tooltip>
-                  <Separator orientation="vertical" className="mx-1 h-6 bg-white/10" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => adjustSpan(item.id, "rowSpan", -1)}
-                        disabled={!canShrinkHeight}
-                      >
-                        <ArrowUp className="size-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Reduce height</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => adjustSpan(item.id, "rowSpan", 1)}
-                        disabled={!canExpandHeight}
-                      >
-                        <ArrowDown className="size-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Expand height</TooltipContent>
-                  </Tooltip>
-                  <Separator orientation="vertical" className="mx-1 h-6 bg-white/10" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleToggleWidget(item.id, false)}
-                        disabled={!canHideWidgets}
-                      >
-                        <EyeOff className="size-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Hide widget</TooltipContent>
-                  </Tooltip>
-                </div>
-              ) : null}
               <div
                 className={cn(
                   "h-full",
-                  editMode && draggingId === item.id && "opacity-70"
+                  editMode && isDragging && "scale-[0.98]"
                 )}
               >
                 {node}
