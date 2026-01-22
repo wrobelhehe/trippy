@@ -11,6 +11,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+    "@atlaskit/pragmatic-drag-and-drop-flourish": "^1.7.7",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.7.7",
     "@base-ui/react": "^1.1.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",
