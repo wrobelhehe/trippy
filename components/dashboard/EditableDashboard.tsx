@@ -4,6 +4,8 @@ import { type CSSProperties, type ReactNode, useMemo, useState, useTransition } 
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronUp,
   EyeOff,
   GripVertical,
   LayoutGrid,
@@ -122,6 +124,24 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
       nextOrder.splice(sourceIndex, 1);
       nextOrder.splice(targetIndex, 0, sourceId);
 
+      const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
+      return prev.map((item) =>
+        orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
+      );
+    });
+  };
+
+  const moveWidget = (widgetId: DashboardWidgetId, direction: "up" | "down") => {
+    setDraftLayout((prev) => {
+      const visible = prev.filter((item) => item.visible);
+      const order = visible.sort((a, b) => a.order - b.order).map((item) => item.id);
+      const currentIndex = order.indexOf(widgetId);
+      if (currentIndex === -1) return prev;
+      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= order.length) return prev;
+      const nextOrder = [...order];
+      nextOrder.splice(currentIndex, 1);
+      nextOrder.splice(targetIndex, 0, widgetId);
       const orderMap = new Map(nextOrder.map((id, index) => [id, index]));
       return prev.map((item) =>
         orderMap.has(item.id) ? { ...item, order: orderMap.get(item.id)! } : item
@@ -325,38 +345,81 @@ export function EditableDashboard({ initialLayout, widgets }: EditableDashboardP
                       Widget library
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="border-white/10 bg-[#0b0f14] text-white">
+                  <SheetContent className="border-white/10 bg-[#0b0f14] text-white sm:max-w-[520px]">
                     <SheetHeader>
                       <SheetTitle>Widget library</SheetTitle>
                       <SheetDescription className="text-white/60">
-                        Add, hide, or rebalance tiles without losing your layout.
+                        Add, hide, or rebalance tiles. Use arrows for quick ordering on mobile.
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="mt-6 space-y-4">
+                    <div className="mt-6 grid gap-4">
                       {DASHBOARD_WIDGETS.map((widget) => {
                         const layoutItem = layoutById.get(widget.id);
                         const isVisible = layoutItem?.visible ?? true;
                         const isLastVisible = isVisible && visibleLayout.length <= 1;
+                        const visibleIndex = visibleLayout.findIndex(
+                          (item) => item.id === widget.id
+                        );
+                        const isFirstVisible = visibleIndex <= 0;
+                        const isLastVisibleOrder =
+                          visibleIndex === visibleLayout.length - 1;
                         return (
                           <div
                             key={widget.id}
-                            className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+                            className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(22,29,40,0.92),rgba(10,15,20,0.9))] p-4 shadow-[0_18px_45px_rgba(5,10,14,0.35)] sm:p-5"
                           >
-                            <div className="space-y-1">
-                              <p className="text-sm font-semibold text-white">
-                                {widget.title}
-                              </p>
-                              <p className="text-xs text-white/60">
-                                {widget.description}
-                              </p>
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold text-white">
+                                  {widget.title}
+                                </p>
+                                <p className="text-xs text-white/60">
+                                  {widget.description}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={isVisible}
+                                disabled={isLastVisible}
+                                onCheckedChange={(checked) =>
+                                  handleToggleWidget(widget.id, checked)
+                                }
+                              />
                             </div>
-                            <Switch
-                              checked={isVisible}
-                              disabled={isLastVisible}
-                              onCheckedChange={(checked) =>
-                                handleToggleWidget(widget.id, checked)
-                              }
-                            />
+                            {isVisible ? (
+                              <div className="mt-4 flex items-center justify-between">
+                                <span className="text-[10px] uppercase tracking-[0.32em] text-white/40">
+                                  Order
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                                    onClick={() => moveWidget(widget.id, "up")}
+                                    disabled={isFirstVisible || isLastVisible}
+                                    aria-label={`Move ${widget.title} up`}
+                                  >
+                                    <ChevronUp className="size-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                                    onClick={() => moveWidget(widget.id, "down")}
+                                    disabled={isLastVisibleOrder || isLastVisible}
+                                    aria-label={`Move ${widget.title} down`}
+                                  >
+                                    <ChevronDown className="size-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="mt-4 text-xs text-white/45">
+                                Hidden from dashboard. Toggle on to place it.
+                              </p>
+                            )}
                           </div>
                         );
                       })}
