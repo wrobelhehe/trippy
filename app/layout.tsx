@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Figtree } from "next/font/google";
+import { Geist_Mono, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
-const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
 const geistMono = Geist_Mono({
@@ -25,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={figtree.variable}>
+    <html lang="en" className={nunitoSans.variable}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${geistMono.variable} font-sans antialiased`}
       >
         {children}
       </body>
