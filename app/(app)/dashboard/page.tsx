@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { listShareLinks } from "@/lib/share/share-links";
-import { listTrips } from "@/lib/supabase/trips";
+import { type Trip, listTrips } from "@/lib/supabase/trips";
 import { cn } from "@/lib/utils";
 
 const formatter = new Intl.DateTimeFormat("en-US", {
@@ -98,8 +98,17 @@ export default async function DashboardPage() {
     { private: 0, link: 0, public: 0 }
   );
 
-  const privacyChartData = [
-    { mode: "private", value: privacyCounts.private, fill: "var(--color-private)" },
+  type PrivacyMode = Trip["privacy_mode"];
+  const privacyChartData: Array<{
+    mode: PrivacyMode;
+    value: number;
+    fill: string;
+  }> = [
+    {
+      mode: "private",
+      value: privacyCounts.private,
+      fill: "var(--color-private)",
+    },
     { mode: "link", value: privacyCounts.link, fill: "var(--color-link)" },
     { mode: "public", value: privacyCounts.public, fill: "var(--color-public)" },
   ];

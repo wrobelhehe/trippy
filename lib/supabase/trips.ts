@@ -56,6 +56,7 @@ async function requireUserId() {
 }
 
 function withTripCounts(row: TripCountRow): Trip {
+  const tags = Array.isArray(row.tags) ? row.tags : [];
   const momentsCount = Array.isArray(row.moments)
     ? row.moments[0]?.count ?? 0
     : 0;
@@ -65,6 +66,7 @@ function withTripCounts(row: TripCountRow): Trip {
   const { moments, trip_media, ...trip } = row;
   return {
     ...trip,
+    tags,
     moments_count: momentsCount,
     media_count: mediaCount,
   };

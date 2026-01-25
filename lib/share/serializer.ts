@@ -500,10 +500,15 @@ export async function getSharePayload(token: string): Promise<SharePayload | nul
       })
     : [];
 
-  const mediaRecords = (mediaResult.data ?? []).map((row) => {
-    const media = row.media as ShareMediaRecord;
-    return media;
-  });
+  const mediaRecords = (mediaResult.data ?? [])
+    .map((row) => {
+      const mediaValue = row.media as
+        | ShareMediaRecord
+        | ShareMediaRecord[]
+        | null;
+      return Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+    })
+    .filter((item): item is ShareMediaRecord => Boolean(item));
 
   const mediaWithUrls = visibility.show_media
     ? await Promise.all(
@@ -695,10 +700,15 @@ export async function getTripSharePayloadForLink(
       })
     : [];
 
-  const mediaRecords = (mediaResult.data ?? []).map((row) => {
-    const media = row.media as ShareMediaRecord;
-    return media;
-  });
+  const mediaRecords = (mediaResult.data ?? [])
+    .map((row) => {
+      const mediaValue = row.media as
+        | ShareMediaRecord
+        | ShareMediaRecord[]
+        | null;
+      return Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+    })
+    .filter((item): item is ShareMediaRecord => Boolean(item));
 
   const mediaWithUrls = visibility.show_media
     ? await Promise.all(
