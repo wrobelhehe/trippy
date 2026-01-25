@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { MapPinned, Search, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MapPinned, Search, Sparkles, Trash2 } from "lucide-react";
 
 import { Highlight, HighlightItem } from "@/components/animate-ui/primitives/effects/highlight";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,12 +15,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -28,12 +42,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 export type TripLibraryItem = {
   id: string;
   title: string;
   placeName: string;
-  privacyMode: "private" | "link" | "public";
   momentsCount: number;
   mediaCount: number;
   tags: string[];
@@ -43,11 +57,16 @@ export type TripLibraryItem = {
 
 export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
   const [query, setQuery] = useState("");
-  const [privacyFilter, setPrivacyFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [withMedia, setWithMedia] = useState(false);
   const [withMoments, setWithMoments] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRefreshing, startTransition] = useTransition();
+  const router = useRouter();
 
   const availableTags = useMemo(() => {
     const tags = new Set<string>();
@@ -65,10 +84,6 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
         const haystack = `${trip.title} ${trip.placeName} ${trip.tags.join(" ")}`
           .toLowerCase();
         if (!haystack.includes(trimmed)) return false;
-      }
-
-      if (privacyFilter !== "all" && trip.privacyMode !== privacyFilter) {
-        return false;
       }
 
       if (tagFilter !== "all" && !trip.tags.includes(tagFilter)) {
@@ -92,12 +107,73 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
   }, [
     query,
     trips,
-    privacyFilter,
     tagFilter,
     pinnedOnly,
     withMedia,
     withMoments,
   ]);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const visibleIds = useMemo(
+    () => filteredTrips.map((trip) => trip.id),
+    [filteredTrips]
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedSet.has(id));
+  const selectedCount = selectedIds.length;
+
+  useEffect(() => {
+    if (!selectionMode) return;
+    const visibleSet = new Set(visibleIds);
+    setSelectedIds((prev) => prev.filter((id) => visibleSet.has(id)));
+  }, [selectionMode, visibleIds]);
+
+  const toggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      if (prev) setSelectedIds([]);
+      return !prev;
+    });
+  };
+
+  const toggleTrip = (tripId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(tripId)
+        ? prev.filter((id) => id !== tripId)
+        : [...prev, tripId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allVisibleSelected ? [] : visibleIds);
+  };
+
+  const handleDeleteTrips = async () => {
+    if (!selectedIds.length) return;
+    setDeleteError(null);
+    setIsDeleting(true);
+
+    try {
+      const responses = await Promise.all(
+        selectedIds.map((tripId) =>
+          fetch(`/api/trips/${tripId}`, { method: "DELETE" })
+        )
+      );
+      const failed = responses.filter((response) => !response.ok);
+      if (failed.length) {
+        throw new Error("Some trips could not be deleted.");
+      }
+      setSelectedIds([]);
+      setSelectionMode(false);
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : "Failed to delete trips."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (trips.length === 0) {
     return (
@@ -107,7 +183,7 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
             <div>
               <CardTitle className="text-2xl">Trip library</CardTitle>
               <CardDescription>
-                Open a trip to revisit moments, media, and map pins.
+                Open a trip to revisit stories, media, and map pins.
               </CardDescription>
             </div>
             <Badge className="border border-white/10 bg-white/5 text-[11px] uppercase tracking-[0.32em] text-white/70">
@@ -136,7 +212,7 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
           <div>
             <CardTitle className="text-2xl">Trip library</CardTitle>
             <CardDescription>
-              Open a trip to revisit moments, media, and map pins.
+              Open a trip to revisit stories, media, and map pins.
             </CardDescription>
           </div>
           <Badge className="border border-white/10 bg-white/5 text-[11px] uppercase tracking-[0.32em] text-white/70">
@@ -157,17 +233,6 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
             />
           </InputGroup>
           <div className="flex flex-wrap gap-2">
-            <Select value={privacyFilter} onValueChange={setPrivacyFilter}>
-              <SelectTrigger className="min-w-[150px] bg-[color:var(--panel-2)]/70">
-                <SelectValue placeholder="Privacy" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All privacy</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="link">Link</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={tagFilter} onValueChange={setTagFilter}>
               <SelectTrigger className="min-w-[160px] bg-[color:var(--panel-2)]/70">
                 <SelectValue placeholder="Tag" />
@@ -194,9 +259,68 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
           </label>
           <label className="flex items-center gap-2">
             <Switch checked={withMoments} onCheckedChange={setWithMoments} />
-            With moments
+            With stories
           </label>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-[color:var(--panel-2)]/70 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={selectionMode ? "secondary" : "outline"}
+              size="sm"
+              onClick={toggleSelectionMode}
+            >
+              {selectionMode ? "Done selecting" : "Select trips"}
+            </Button>
+            {selectionMode ? (
+              <Badge
+                variant="outline"
+                className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.24em] text-white/70"
+              >
+                {selectedCount} selected
+              </Badge>
+            ) : null}
+          </div>
+          {selectionMode ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
+                {allVisibleSelected ? "Clear selection" : "Select all"}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={selectedCount === 0 || isDeleting}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete selected
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent size="sm">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete selected trips?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      These trips will be removed from your library and won&apos;t
+                      appear on your profile or shared pages.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteTrips}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete trips"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          ) : null}
+        </div>
+        {deleteError ? (
+          <p className="text-sm text-rose-200">{deleteError}</p>
+        ) : null}
       </CardHeader>
       <CardContent>
         {filteredTrips.length === 0 ? (
@@ -213,54 +337,115 @@ export function TripsLibrary({ trips }: { trips: TripLibraryItem[] }) {
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredTrips.map((trip, index) => (
                 <HighlightItem key={trip.id}>
-                  <Link
-                    href={`/trips/${trip.id}`}
-                    className="group flex h-full flex-col gap-4 rounded-[28px] border border-white/10 bg-[color:var(--panel-2)]/80 p-5 hover:border-white/20"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-base font-semibold">{trip.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {trip.placeName}
-                        </p>
+                  {selectionMode ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleTrip(trip.id)}
+                      className={cn(
+                        "group flex h-full w-full flex-col gap-4 rounded-[28px] border border-white/10 bg-[color:var(--panel-2)]/80 p-5 text-left transition hover:border-white/20",
+                        selectedSet.has(trip.id) &&
+                          "border-[color:var(--lagoon)]/50 shadow-[0_0_0_1px_rgba(79,234,217,0.3)]"
+                      )}
+                      aria-pressed={selectedSet.has(trip.id)}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-base font-semibold">{trip.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {trip.placeName}
+                          </p>
+                        </div>
+                        <div
+                          className="mt-1"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedSet.has(trip.id)}
+                            onCheckedChange={() => toggleTrip(trip.id)}
+                            aria-label={`Select ${trip.title}`}
+                          />
+                        </div>
                       </div>
-                      <Badge variant="secondary" className="capitalize">
-                        {trip.privacyMode}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <Badge
-                        variant="outline"
-                        className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
-                      >
-                        {trip.momentsCount} moments
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
-                      >
-                        {trip.mediaCount} media
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
-                      >
-                        {trip.hasPin ? "Pinned" : "No pin"}
-                      </Badge>
-                      <span>{trip.dateLabel ?? "Dates TBD"}</span>
-                    </div>
-                    <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {trip.tags.length
-                          ? `${trip.tags.length} tags`
-                          : "No tags yet"}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Sparkles className="size-3.5 text-[color:var(--lagoon)]" />
-                        Trip #{index + 1}
-                      </span>
-                    </div>
-                  </Link>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.momentsCount} stories
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.mediaCount} media
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.hasPin ? "Pinned" : "No pin"}
+                        </Badge>
+                        <span>{trip.dateLabel ?? "Dates TBD"}</span>
+                      </div>
+                      <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {trip.tags.length
+                            ? `${trip.tags.length} tags`
+                            : "No tags yet"}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="size-3.5 text-[color:var(--lagoon)]" />
+                          Trip #{index + 1}
+                        </span>
+                      </div>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/trips/${trip.id}`}
+                      className="group flex h-full flex-col gap-4 rounded-[28px] border border-white/10 bg-[color:var(--panel-2)]/80 p-5 hover:border-white/20"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-base font-semibold">{trip.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {trip.placeName}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.momentsCount} stories
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.mediaCount} media
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-white/15 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-white/70"
+                        >
+                          {trip.hasPin ? "Pinned" : "No pin"}
+                        </Badge>
+                        <span>{trip.dateLabel ?? "Dates TBD"}</span>
+                      </div>
+                      <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {trip.tags.length
+                            ? `${trip.tags.length} tags`
+                            : "No tags yet"}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="size-3.5 text-[color:var(--lagoon)]" />
+                          Trip #{index + 1}
+                        </span>
+                      </div>
+                    </Link>
+                  )}
                 </HighlightItem>
               ))}
             </div>

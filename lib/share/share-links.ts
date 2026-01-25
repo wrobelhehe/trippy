@@ -66,19 +66,30 @@ export async function createShareLink(input: CreateShareLinkInput) {
   if (input.scope === "trip" && !input.tripId) {
     throw new Error("tripId is required for trip share links.");
   }
-  const defaultExpiry = new Date(
-    Date.now() + 30 * 24 * 60 * 60 * 1000
-  ).toISOString();
   const token = generateShareToken();
   const tokenHash = hashShareToken(token);
+  const defaultOverrides = {
+    hideExactDates: false,
+    allowDownloads: true,
+    showOwner: true,
+    showStats: true,
+    showGlobe: true,
+    showHighlights: false,
+    showMoments: true,
+    showMedia: true,
+    showTags: true,
+    showProfileBio: true,
+    showTripList: true,
+    showTripDescriptions: true,
+  };
 
   const payload = {
     owner_id: userId,
     scope: input.scope,
     trip_id: input.tripId ?? null,
     token_hash: tokenHash,
-    privacy_overrides: input.privacyOverrides ?? {},
-    expires_at: input.expiresAt ?? defaultExpiry,
+    privacy_overrides: input.privacyOverrides ?? defaultOverrides,
+    expires_at: input.expiresAt ?? null,
   };
 
   const { data, error } = await supabase

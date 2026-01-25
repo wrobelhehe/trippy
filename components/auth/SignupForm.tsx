@@ -48,7 +48,7 @@ export function SignupForm({
           </p>
           <h1 className="text-2xl font-semibold">Create a Trippy account</h1>
           <FieldDescription>
-            Store trips, moments, and share links with control.
+            Store trips, stories, and share links in one place.
           </FieldDescription>
         </div>
         {clientError ? <FieldError>{clientError}</FieldError> : null}

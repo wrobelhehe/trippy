@@ -185,7 +185,7 @@ export function GlobeHub({
                         variant="outline"
                         className="border-white/15 bg-black/30 text-[10px] text-white/80"
                       >
-                        {trip.momentsCount} moments
+                        {trip.momentsCount} stories
                       </Badge>
                     </div>
                   </button>

@@ -26,7 +26,7 @@ const formatDateRange = (startDate: string | null, endDate: string | null) => {
 
 export default async function TripsPage() {
   const trips = await listTrips();
-  const totalMoments = trips.reduce((sum, trip) => sum + trip.moments_count, 0);
+  const totalStories = trips.reduce((sum, trip) => sum + trip.moments_count, 0);
   const totalMedia = trips.reduce((sum, trip) => sum + trip.media_count, 0);
   const pinnedTrips = trips.filter(
     (trip) => trip.lat !== null && trip.lng !== null
@@ -35,7 +35,6 @@ export default async function TripsPage() {
     id: trip.id,
     title: trip.title,
     placeName: trip.place_name,
-    privacyMode: trip.privacy_mode,
     momentsCount: trip.moments_count,
     mediaCount: trip.media_count,
     tags: trip.tags,
@@ -62,8 +61,7 @@ export default async function TripsPage() {
               Your journeys, styled like a living archive.
             </h1>
             <p className="max-w-xl text-sm text-muted-foreground">
-              Browse every expedition, refresh highlights, and keep your globe
-              glowing with new moments.
+              Browse every expedition and keep your globe glowing with new stories.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild className="gap-2">
@@ -100,9 +98,9 @@ export default async function TripsPage() {
             <Card className="border border-white/10 bg-[color:var(--panel-2)]/80 shadow-lg">
               <CardContent className="space-y-2 py-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                  Moments
+                  Stories
                 </p>
-                <p className="text-2xl font-semibold">{totalMoments}</p>
+                <p className="text-2xl font-semibold">{totalStories}</p>
               </CardContent>
             </Card>
             <Card className="border border-white/10 bg-[color:var(--panel-2)]/80 shadow-lg">

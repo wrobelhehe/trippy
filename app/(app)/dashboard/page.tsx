@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { listShareLinks } from "@/lib/share/share-links";
-import { type Trip, listTrips } from "@/lib/supabase/trips";
+import { listTrips } from "@/lib/supabase/trips";
 import { cn } from "@/lib/utils";
 
 const formatter = new Intl.DateTimeFormat("en-US", {
@@ -49,8 +49,8 @@ const statMeta = [
     shine: "rgba(243,161,95,0.45)",
   },
   {
-    label: "Moments",
-    helper: "Highlights logged",
+    label: "Stories",
+    helper: "Scenes captured",
     icon: NotebookPen,
     tone: "text-[color:var(--ember)]",
     panel: "bg-[linear-gradient(150deg,#161b24,#0b0f14)]",
@@ -90,27 +90,9 @@ export default async function DashboardPage() {
 
   const statValues = [totalTrips, countries.size, moments, media];
 
-  const privacyCounts = trips.reduce(
-    (acc, trip) => {
-      acc[trip.privacy_mode] += 1;
-      return acc;
-    },
-    { private: 0, link: 0, public: 0 }
-  );
-
-  type PrivacyMode = Trip["privacy_mode"];
-  const privacyChartData: Array<{
-    mode: PrivacyMode;
-    value: number;
-    fill: string;
-  }> = [
-    {
-      mode: "private",
-      value: privacyCounts.private,
-      fill: "var(--color-private)",
-    },
-    { mode: "link", value: privacyCounts.link, fill: "var(--color-link)" },
-    { mode: "public", value: privacyCounts.public, fill: "var(--color-public)" },
+  const storyChartData = [
+    { mode: "stories", value: moments, fill: "var(--color-stories)" },
+    { mode: "media", value: media, fill: "var(--color-media)" },
   ];
 
   const windowStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -141,12 +123,6 @@ export default async function DashboardPage() {
     if (link.revoked_at) return false;
     if (!link.expires_at) return true;
     return new Date(link.expires_at) > now;
-  });
-  const expiringSoon = shareLinks.filter((link) => {
-    if (link.revoked_at || !link.expires_at) return false;
-    const expiresAt = new Date(link.expires_at);
-    const diff = expiresAt.getTime() - now.getTime();
-    return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
   });
   const tripsMissingMoments = trips.filter((trip) => trip.moments_count === 0);
   const tripsMissingMedia = trips.filter((trip) => trip.media_count === 0);
@@ -229,7 +205,7 @@ export default async function DashboardPage() {
                   Your memory archive, curated for easy momentum.
                 </CardTitle>
                 <CardDescription className="text-base text-white/70">
-                  Keep the globe growing, polish highlights, and ship share links
+                  Keep the globe growing, refine stories, and ship share links
                   with confidence.
                 </CardDescription>
               </div>
@@ -273,14 +249,14 @@ export default async function DashboardPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-[color:var(--panel-2)]/80 p-4">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                  Share links
+                  Sharing
                 </p>
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-4xl font-semibold text-white">
                     {activeShareLinks.length}
                   </p>
                   <div className="text-xs text-muted-foreground">
-                    {expiringSoon.length} expiring soon
+                    Links created
                   </div>
                 </div>
                 <Button
@@ -289,7 +265,7 @@ export default async function DashboardPage() {
                   className="mt-4 w-full justify-between border-white/30 bg-white/5 text-white hover:bg-white/10"
                 >
                   <Link href="/profile">
-                    Manage share links
+                    Open sharing settings
                     <Share2 className="size-4" />
                   </Link>
                 </Button>
@@ -300,7 +276,7 @@ export default async function DashboardPage() {
                 </p>
                 <div className="mt-4 space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Trips missing moments</span>
+                    <span className="text-muted-foreground">Trips missing stories</span>
                     <span className="font-semibold text-white">
                       {tripsMissingMoments.length}
                     </span>
@@ -354,7 +330,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <div className="text-[10px] uppercase tracking-[0.2em] text-white/50">
-                    {trip.moments_count} moments
+                    {trip.moments_count} stories
                   </div>
                 </div>
               </Link>
@@ -372,11 +348,11 @@ export default async function DashboardPage() {
 
       <DashboardCharts
         tripsByMonth={tripsByMonth}
-        privacyChartData={privacyChartData}
+        storyChartData={storyChartData}
         hasTrips={hasTrips}
         className="sm:col-span-2 lg:col-span-12 lg:grid-cols-12"
         tripCardClassName="lg:col-span-7 xl:col-span-8"
-        privacyCardClassName="lg:col-span-5 xl:col-span-4"
+        storyCardClassName="lg:col-span-5 xl:col-span-4"
       />
 
       <Card className="sm:col-span-2 lg:col-span-12 border border-white/10 bg-[linear-gradient(150deg,rgba(59,211,199,0.12),rgba(10,15,20,0.9))] shadow-lg backdrop-blur">
@@ -407,7 +383,7 @@ export default async function DashboardPage() {
                 {tripsNeedingAttention}
               </p>
               <p className="text-xs text-muted-foreground">
-                Trips missing moments or media.
+                Trips missing stories or media.
               </p>
             </div>
           </div>

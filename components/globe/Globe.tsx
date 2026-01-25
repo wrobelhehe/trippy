@@ -642,7 +642,7 @@ function GlobeCanvasInner({
             </CardHeader>
             <CardContent className="space-y-3 text-xs text-muted-foreground">
               <div className="flex items-center justify-between">
-                <span>Moments</span>
+                <span>Stories</span>
                 <span className="text-white">{selectedPin.momentsCount ?? 0}</span>
               </div>
               <div className="flex items-center justify-between">

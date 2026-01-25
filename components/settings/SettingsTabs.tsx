@@ -5,8 +5,7 @@ import { Loader2, Sparkles, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Profile } from "@/lib/supabase/profile";
-import { type ShareLinkItem } from "@/components/share/ShareLinkList";
-import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
+import { SimpleShareLink } from "@/components/share/SimpleShareLink";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,18 +18,10 @@ import {
 import { DatePicker, formatDateInputValue } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsContents,
-  TabsList,
-  TabsTrigger,
-} from "@/components/animate-ui/components/animate/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 type SettingsTabsProps = {
   profile: Profile | null;
-  profileLinks: ShareLinkItem[];
 };
 
 const MAX_AVATAR_SIZE_MB = 5;
@@ -381,7 +372,7 @@ function ProfileHighlight({ profile }: { profile: Profile | null }) {
   );
 }
 
-export function SettingsTabs({ profile, profileLinks }: SettingsTabsProps) {
+export function SettingsTabs({ profile }: SettingsTabsProps) {
   const displayName = toDisplayName(profile);
 
   return (
@@ -402,8 +393,7 @@ export function SettingsTabs({ profile, profileLinks }: SettingsTabsProps) {
                 Shape your traveler identity
               </h1>
               <p className="max-w-xl text-sm text-muted-foreground">
-                Keep your profile polished and choose exactly what guests see
-                when they open a shared link.
+                Keep your profile polished and share it with one tap.
               </p>
             </div>
           </div>
@@ -419,41 +409,19 @@ export function SettingsTabs({ profile, profileLinks }: SettingsTabsProps) {
         </div>
       </section>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-[color:var(--panel-3)]/80 p-1 text-sm">
-          <TabsTrigger value="profile" className="rounded-xl">
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="sharing" className="rounded-xl">
-            Share links
-          </TabsTrigger>
-        </TabsList>
-        <TabsContents className="space-y-6">
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-              <ProfileDetailsForm profile={profile} />
-              <div className="space-y-6">
-                <AvatarPanel profile={profile} />
-                <ProfileHighlight profile={profile} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="sharing" className="space-y-6">
-            <Card className="border border-white/10 bg-[color:var(--panel)]/85 shadow-lg backdrop-blur">
-              <CardHeader>
-                <CardTitle className="text-2xl">Profile sharing</CardTitle>
-                <CardDescription>
-                  Control who can see your profile and manage active share links.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ShareLinksPanel scope="profile" links={profileLinks} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </TabsContents>
-      </Tabs>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <ProfileDetailsForm profile={profile} />
+        <div className="space-y-6">
+          <AvatarPanel profile={profile} />
+          <ProfileHighlight profile={profile} />
+          <SimpleShareLink
+            scope="profile"
+            title="Share your profile"
+            description="One tap creates a shareable link. No settings, no expiry."
+            ctaLabel="Create share link"
+          />
+        </div>
+      </div>
     </div>
   );
 }

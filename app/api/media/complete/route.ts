@@ -33,7 +33,11 @@ export async function POST(request: Request) {
     }
 
     if (body.momentId) {
-      await attachMediaToMoment(body.momentId, media.id);
+      await attachMediaToMoment(
+        body.momentId,
+        media.id,
+        typeof body.orderIndex === "number" ? body.orderIndex : null
+      );
     }
 
     return NextResponse.json(media);

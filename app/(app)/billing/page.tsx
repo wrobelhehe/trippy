@@ -92,7 +92,7 @@ export default async function BillingPage() {
               <ul className="grid gap-3 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <span className="size-1.5 rounded-full bg-foreground" />
-                  Unlimited share links with privacy controls.
+                  Unlimited share links for trips and profiles.
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="size-1.5 rounded-full bg-foreground" />

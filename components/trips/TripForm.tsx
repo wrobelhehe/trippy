@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { DatePicker, formatDateInputValue } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { TripLocationPicker } from "@/components/trips/TripLocationPicker";
 
 type TripResponse = {
   id: string;
@@ -27,7 +27,20 @@ export function TripForm({
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [city, setCity] = useState("");
+  const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const router = useRouter();
+  const handleLocationChange = useCallback(
+    (next: { city: string; countryCode: string | null; lat: number | null; lng: number | null }) => {
+      setCity(next.city);
+      setCountryCode(next.countryCode);
+      setLat(next.lat);
+      setLng(next.lng);
+    },
+    []
+  );
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,12 +49,19 @@ export function TripForm({
     const form = event.currentTarget;
 
     const formData = new FormData(form);
+    if (!city.trim() || !countryCode) {
+      setError("Pick a city to continue.");
+      setLoading(false);
+      return;
+    }
     const payload = {
       title: formData.get("title"),
-      placeName: formData.get("placeName"),
+      placeName: city.trim(),
       startDate: startDate ? formatDateInputValue(startDate) : null,
       endDate: endDate ? formatDateInputValue(endDate) : null,
-      shortDescription: formData.get("shortDescription") || null,
+      countryCode,
+      lat,
+      lng,
     };
 
     try {
@@ -60,6 +80,10 @@ export function TripForm({
       form.reset();
       setStartDate(undefined);
       setEndDate(undefined);
+      setCity("");
+      setCountryCode(null);
+      setLat(null);
+      setLng(null);
       onCreated?.(trip);
       router.refresh();
     } catch (err) {
@@ -89,15 +113,18 @@ export function TripForm({
           </Badge>
         </div>
         <Separator className="my-4 bg-white/10" />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Trip title</Label>
             <Input id="title" name="title" required />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="placeName">Place name</Label>
-            <Input id="placeName" name="placeName" required />
-          </div>
+          <TripLocationPicker
+            city={city}
+            countryCode={countryCode}
+            lat={lat}
+            lng={lng}
+            onLocationChange={handleLocationChange}
+          />
         </div>
       </div>
 
@@ -135,25 +162,6 @@ export function TripForm({
               placeholder="Select end date"
             />
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-3xl border border-white/10 bg-[color:var(--panel-2)]/70 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.25)]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold">Trip mood</p>
-            <p className="text-xs text-muted-foreground">
-              One line that captures the atmosphere.
-            </p>
-          </div>
-          <Badge className="border border-white/10 bg-white/5 text-[11px] uppercase tracking-[0.24em] text-white/70">
-            Step 03
-          </Badge>
-        </div>
-        <Separator className="my-4 bg-white/10" />
-        <div className="space-y-2">
-          <Label htmlFor="shortDescription">Short description</Label>
-          <Textarea id="shortDescription" name="shortDescription" rows={3} />
         </div>
       </div>
 

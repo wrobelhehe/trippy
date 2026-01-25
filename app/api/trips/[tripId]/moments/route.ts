@@ -34,6 +34,7 @@ export async function POST(
     }
 
     const moment = await createMoment(tripId, {
+      title: body.title,
       contentText: body.contentText,
       momentTimestamp: body.momentTimestamp,
       orderIndex: body.orderIndex,

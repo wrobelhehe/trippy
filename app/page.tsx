@@ -24,15 +24,15 @@ import { Separator } from "@/components/ui/separator"
 const primaryFeatures = [
   {
     title: "Dashboard overview",
-    description: "See your memory globe, key stats, and latest highlights.",
+    description: "See your memory globe, key stats, and latest stories.",
     href: "/dashboard",
     badge: "Core",
     icon: LayoutDashboard,
     ctaLabel: "Open dashboard",
   },
   {
-    title: "Trips & moments",
-    description: "Create journeys, add diary moments, and attach media.",
+    title: "Trips & stories",
+    description: "Create journeys, add story scenes, and attach media.",
     href: "/trips",
     badge: "Core",
     icon: MapPinned,
@@ -40,7 +40,7 @@ const primaryFeatures = [
   },
   {
     title: "Share links",
-    description: "Generate secure, redacted links for trips or profiles.",
+    description: "Generate one-tap links for trips or profiles.",
     href: "/profile",
     badge: "Share",
     icon: Share2,
@@ -48,7 +48,7 @@ const primaryFeatures = [
   },
   {
     title: "Guest viewing",
-    description: "Open shared links with safe, redacted guest pages.",
+    description: "Open shared links with immersive guest pages.",
     href: "/s/trip/:token",
     badge: "Public",
     icon: Image,
@@ -68,15 +68,15 @@ const primaryFeatures = [
 const steps = [
   {
     title: "Capture the trip",
-    description: "Create a trip, add moments, and upload photos.",
+    description: "Create a trip, add story scenes, and upload photos.",
   },
   {
     title: "Curate the story",
-    description: "Highlight key moments and polish the gallery.",
+    description: "Compose the narrative with media and descriptions.",
   },
   {
     title: "Share with a link",
-    description: "Generate secure links that respect your privacy defaults.",
+    description: "Generate a simple link and send it right away.",
   },
 ]
 
@@ -135,8 +135,8 @@ export default function Page() {
                 not a feed.
               </h1>
               <p className="max-w-2xl text-lg text-white/70">
-                Capture past trips with intentional moments, curate share links
-                that respect privacy, and invite guests through secure links.
+                Capture past trips as story scenes, generate share links in a
+                single tap, and invite guests through immersive pages.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button
@@ -166,7 +166,7 @@ export default function Page() {
                 <CardHeader className="space-y-3">
                   <CardTitle className="text-lg">Archive preview</CardTitle>
                   <CardDescription className="text-sm text-white/60">
-                    A glimpse at your globe, highlights, and share links in one
+                    A glimpse at your globe, stories, and share links in one
                     view.
                   </CardDescription>
                 </CardHeader>
@@ -181,21 +181,21 @@ export default function Page() {
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-[color:var(--panel-2)] p-4">
                       <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                        Moments
+                        Stories
                       </p>
                       <p className="mt-2 text-2xl font-semibold">38</p>
-                      <p className="text-xs text-white/60">Highlighted stories</p>
+                      <p className="text-xs text-white/60">Scenes captured</p>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-[color:var(--panel-3)] p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">Share links</p>
                       <Badge className="border border-white/10 bg-white/10 text-white">
-                        Private
+                        One tap
                       </Badge>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-white/60">
-                      {["Trip links", "Profile links", "Revocable"].map(
+                      {["Trip link", "Profile link", "No expiry"].map(
                         (label) => (
                           <div
                             key={label}
@@ -310,24 +310,23 @@ export default function Page() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <Card className="border border-white/10 bg-[color:var(--panel-2)]/85 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-xl">Privacy-first by design</CardTitle>
+              <CardTitle className="text-xl">Sharing made effortless</CardTitle>
               <CardDescription className="text-sm text-white/60">
-                Redaction defaults, token hashing, and Supabase RLS keep your
-                memories yours.
+                One tap creates a link. No configuration, no expiration.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-white/70">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 size-4 text-[color:var(--lagoon)]" />
-                <p>Share links can rotate or revoke instantly.</p>
+                <p>Create a shareable trip or profile link in seconds.</p>
               </div>
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 size-4 text-[color:var(--lagoon)]" />
-                <p>Guest views only expose allowed fields.</p>
+                <p>Links stay live, so sharing never needs upkeep.</p>
               </div>
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 size-4 text-[color:var(--lagoon)]" />
-                <p>Audit logs track share link activity.</p>
+                <p>Guest views focus on the story, not the settings.</p>
               </div>
             </CardContent>
           </Card>

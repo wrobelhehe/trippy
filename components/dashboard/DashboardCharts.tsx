@@ -27,43 +27,39 @@ const tripsChartConfig = {
   },
 } satisfies ChartConfig
 
-const privacyChartConfig = {
-  private: {
-    label: "Private",
+const storyChartConfig = {
+  stories: {
+    label: "Stories",
     color: "var(--chart-2)",
   },
-  link: {
-    label: "Link",
+  media: {
+    label: "Media",
     color: "var(--chart-4)",
-  },
-  public: {
-    label: "Public",
-    color: "var(--chart-5)",
   },
 } satisfies ChartConfig
 
 type TripsByMonth = { month: string; trips: number }
 
-type PrivacyChartDatum = {
-  mode: "private" | "link" | "public"
+type StoryChartDatum = {
+  mode: "stories" | "media"
   value: number
   fill: string
 }
 
 export function DashboardCharts({
   tripsByMonth,
-  privacyChartData,
+  storyChartData,
   hasTrips,
   className,
   tripCardClassName,
-  privacyCardClassName,
+  storyCardClassName,
 }: {
   tripsByMonth: TripsByMonth[]
-  privacyChartData: PrivacyChartDatum[]
+  storyChartData: StoryChartDatum[]
   hasTrips: boolean
   className?: string
   tripCardClassName?: string
-  privacyCardClassName?: string
+  storyCardClassName?: string
 }) {
   return (
     <div className={cn("grid gap-6 lg:grid-cols-2", className)}>
@@ -109,24 +105,24 @@ export function DashboardCharts({
         <Card
           className={cn(
             "flex h-full flex-col border border-white/10 bg-[color:var(--panel)]/85 shadow-lg backdrop-blur",
-            privacyCardClassName
+            storyCardClassName
           )}
         >
           <CardHeader>
-            <CardTitle className="text-lg">Privacy mix</CardTitle>
-            <CardDescription>How your trips are currently shared.</CardDescription>
+            <CardTitle className="text-lg">Story mix</CardTitle>
+            <CardDescription>Balance between stories and media.</CardDescription>
           </CardHeader>
         <CardContent className="flex flex-1 items-center py-3">
           {hasTrips ? (
             <ChartContainer
-              config={privacyChartConfig}
+              config={storyChartConfig}
               className="h-full min-h-[180px] w-full"
             >
                 <PieChart>
                   <ChartTooltip
                     content={<ChartTooltipContent nameKey="mode" hideLabel />}
                   />
-                  <Pie data={privacyChartData} dataKey="value" nameKey="mode" />
+                  <Pie data={storyChartData} dataKey="value" nameKey="mode" />
                   <ChartLegend
                     content={<ChartLegendContent nameKey="mode" />}
                   />
@@ -134,7 +130,7 @@ export function DashboardCharts({
               </ChartContainer>
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                Privacy breakdown will appear once trips exist.
+                Story mix appears once trips exist.
               </div>
             )}
           </CardContent>

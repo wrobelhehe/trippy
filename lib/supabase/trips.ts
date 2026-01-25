@@ -5,6 +5,7 @@ export type Trip = {
   owner_id: string;
   title: string;
   place_name: string;
+  story_preset: string | null;
   country_code: string | null;
   lat: number | null;
   lng: number | null;
@@ -13,8 +14,6 @@ export type Trip = {
   short_description: string | null;
   cover_media_id: string | null;
   tags: string[];
-  privacy_mode: "private" | "link" | "public";
-  hide_exact_dates: boolean;
   moments_count: number;
   media_count: number;
   created_at: string;
@@ -30,13 +29,12 @@ type TripCountRow = Trip & {
 export type CreateTripInput = {
   title: string;
   placeName: string;
+  storyPreset?: string | null;
   startDate?: string | null;
   endDate?: string | null;
   shortDescription?: string | null;
   coverMediaId?: string | null;
   tags?: string[];
-  privacyMode?: "private" | "link" | "public";
-  hideExactDates?: boolean;
   countryCode?: string | null;
   lat?: number | null;
   lng?: number | null;
@@ -121,13 +119,12 @@ export async function createTrip(input: CreateTripInput) {
     owner_id: userId,
     title: input.title,
     place_name: input.placeName,
+    story_preset: input.storyPreset ?? null,
     start_date: input.startDate ?? null,
     end_date: input.endDate ?? null,
     short_description: input.shortDescription ?? null,
     cover_media_id: input.coverMediaId ?? null,
     tags: input.tags ?? [],
-    privacy_mode: input.privacyMode ?? "private",
-    hide_exact_dates: input.hideExactDates ?? true,
     country_code: input.countryCode ?? null,
     lat: input.lat ?? null,
     lng: input.lng ?? null,
@@ -151,6 +148,7 @@ export async function updateTrip(tripId: string, input: UpdateTripInput) {
   const payload: Record<string, unknown> = {};
   if (input.title !== undefined) payload.title = input.title;
   if (input.placeName !== undefined) payload.place_name = input.placeName;
+  if (input.storyPreset !== undefined) payload.story_preset = input.storyPreset;
   if (input.startDate !== undefined) payload.start_date = input.startDate;
   if (input.endDate !== undefined) payload.end_date = input.endDate;
   if (input.shortDescription !== undefined)
@@ -158,9 +156,6 @@ export async function updateTrip(tripId: string, input: UpdateTripInput) {
   if (input.coverMediaId !== undefined)
     payload.cover_media_id = input.coverMediaId;
   if (input.tags !== undefined) payload.tags = input.tags;
-  if (input.privacyMode !== undefined) payload.privacy_mode = input.privacyMode;
-  if (input.hideExactDates !== undefined)
-    payload.hide_exact_dates = input.hideExactDates;
   if (input.countryCode !== undefined) payload.country_code = input.countryCode;
   if (input.lat !== undefined) payload.lat = input.lat;
   if (input.lng !== undefined) payload.lng = input.lng;

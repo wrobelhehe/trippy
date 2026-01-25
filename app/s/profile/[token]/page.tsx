@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import {
   ArrowRight,
   Camera,
-  Compass,
   Globe2,
   MapPinned,
   Sparkles,
@@ -83,7 +82,7 @@ export default async function ShareProfilePage({
     );
   }
 
-  const { owner, trips, privacy, visibility, stats } = payload;
+  const { owner, trips, visibility, stats } = payload;
   const rawName = owner?.display_name ?? null;
   const safeName = rawName && rawName.includes("@") ? null : rawName;
   const initials = toInitials(safeName ?? "Traveler");
@@ -116,9 +115,7 @@ export default async function ShareProfilePage({
                   Shared profile
                 </Badge>
                 <Badge variant="outline" className="border-white/20 text-white/80">
-                  {privacy.hide_exact_dates
-                    ? "Exact dates hidden"
-                    : "Exact dates visible"}
+                  Always shareable
                 </Badge>
               </div>
               <CardTitle className="text-3xl md:text-4xl">
@@ -159,12 +156,7 @@ export default async function ShareProfilePage({
               ) : null}
 
               <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[color:var(--panel-2)]/70 px-4 py-3 text-xs text-muted-foreground">
-                <Compass className="size-4 text-[color:var(--sunrise)]" />
-                <span>
-                  {privacy.hide_exact_dates
-                    ? "Exact dates are hidden across shared trips."
-                    : "Exact trip dates are visible."}
-                </span>
+                This profile shares the full story behind each trip.
               </div>
             </CardContent>
           </Card>
@@ -174,7 +166,7 @@ export default async function ShareProfilePage({
               <CardHeader className="space-y-3">
                 <CardTitle className="text-xl">Atlas overview</CardTitle>
                 <CardDescription>
-                  Drag the globe to explore shared trip pins.
+                  A static globe snapshot of shared locations.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -184,7 +176,7 @@ export default async function ShareProfilePage({
                     <Globe
                       pins={pins}
                       showLabels
-                      controlsEnabled
+                      controlsEnabled={false}
                       showTripLink={false}
                     />
                   </div>
@@ -216,7 +208,7 @@ export default async function ShareProfilePage({
               <CardContent className="space-y-2 p-4">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-muted-foreground">
                   <Sparkles className="size-4 text-[color:var(--ember)]" />
-                  Moments
+                  Stories
                 </div>
                 <p className="text-3xl font-semibold">
                   {formatNumber(stats.moments_count)}
@@ -299,7 +291,7 @@ export default async function ShareProfilePage({
                       ) : null}
                       {visibility.show_stats ? (
                         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          <span>{trip.moments_count} moments</span>
+                          <span>{trip.moments_count} stories</span>
                           <span>{trip.media_count} media</span>
                         </div>
                       ) : null}

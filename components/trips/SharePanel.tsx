@@ -1,27 +1,13 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
-import { listShareLinks } from "@/lib/share/share-links";
+import { SimpleShareLink } from "@/components/share/SimpleShareLink";
 
-export async function SharePanel({ tripId }: { tripId: string }) {
-  const links = await listShareLinks({ tripId });
-
+export function SharePanel({ tripId }: { tripId: string }) {
   return (
-    <Card className="border border-white/10 bg-[color:var(--panel)]/85 shadow-lg backdrop-blur">
-      <CardHeader>
-        <CardTitle className="text-xl">Share this trip</CardTitle>
-        <CardDescription>
-          Generate a private link and control what guests can see.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ShareLinksPanel scope="trip" tripId={tripId} links={links} />
-      </CardContent>
-    </Card>
+    <SimpleShareLink
+      scope="trip"
+      tripId={tripId}
+      title="Share this trip"
+      description="One tap creates a shareable link — no extra settings."
+      ctaLabel="Create share link"
+    />
   );
 }

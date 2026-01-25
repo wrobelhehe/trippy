@@ -38,17 +38,19 @@ export type ShareMediaItem = {
   size_bytes: number | null;
 };
 
-export type ShareMoment = {
+export type ShareStoryEntry = {
   id: string;
-  content_text: string;
-  moment_timestamp: string | null;
+  title: string | null;
+  description: string;
   order_index: number;
+  media: ShareMediaItem[];
 };
 
 export type ShareTrip = {
   id: string;
   title: string;
   place_name: string;
+  story_preset: string | null;
   country_code: string | null;
   lat: number | null;
   lng: number | null;
@@ -68,9 +70,7 @@ export type ShareTripPayload = {
   visibility: ShareVisibility;
   owner: ShareOwner | null;
   trip: ShareTrip;
-  highlights: string[];
-  moments: ShareMoment[];
-  media: ShareMediaItem[];
+  story_entries: ShareStoryEntry[];
 };
 
 export type ShareProfileTrip = {
@@ -124,6 +124,7 @@ type ShareTripRecord = {
   owner_id: string;
   title: string;
   place_name: string;
+  story_preset: string | null;
   country_code: string | null;
   lat: number | null;
   lng: number | null;
@@ -138,8 +139,8 @@ type ShareTripRecord = {
 
 type ShareMomentRecord = {
   id: string;
+  title: string | null;
   content_text: string;
-  moment_timestamp: string | null;
   order_index: number;
 };
 
@@ -172,9 +173,9 @@ function normalizePrivacy(
 
   return {
     hide_exact_dates:
-      typeof hideExactDatesValue === "boolean" ? hideExactDatesValue : true,
+      typeof hideExactDatesValue === "boolean" ? hideExactDatesValue : false,
     allow_downloads:
-      typeof allowDownloadsValue === "boolean" ? allowDownloadsValue : false,
+      typeof allowDownloadsValue === "boolean" ? allowDownloadsValue : true,
   };
 }
 
@@ -199,7 +200,7 @@ function normalizeVisibility(
       overrides,
       "showHighlights",
       "show_highlights",
-      true
+      false
     ),
     show_moments: readBooleanOverride(
       overrides,
@@ -263,16 +264,6 @@ function formatDateLabel(
 
   const solo = startDate ?? endDate;
   return solo?.toLocaleDateString("en-US", formatOptions) ?? null;
-}
-
-function normalizeHighlights(input: unknown) {
-  if (!Array.isArray(input)) {
-    return [];
-  }
-
-  return input
-    .map((item) => (typeof item === "string" ? item : null))
-    .filter((item): item is string => Boolean(item));
 }
 
 async function createSignedUrl(
@@ -427,34 +418,21 @@ export async function getSharePayload(token: string): Promise<SharePayload | nul
   }
 
   const tripId = shareLinkRecord.trip_id;
+  const tripResult = await supabaseAdmin
+    .from("trips")
+    .select(
+      "id, owner_id, title, place_name, story_preset, country_code, lat, lng, start_date, end_date, short_description, tags, deleted_at, moments_count, media_count"
+    )
+    .eq("id", tripId)
+    .maybeSingle();
 
-  const [tripResult, highlightsResult, momentsResult, mediaResult] =
-    await Promise.all([
-      supabaseAdmin
-        .from("trips")
-        .select(
-          "id, owner_id, title, place_name, country_code, lat, lng, start_date, end_date, short_description, tags, deleted_at, moments_count, media_count"
-        )
-        .eq("id", tripId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("trip_highlights")
-        .select("highlight_items")
-        .eq("trip_id", tripId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("moments")
-        .select("id, content_text, moment_timestamp, order_index, deleted_at")
-        .eq("trip_id", tripId)
-        .is("deleted_at", null)
-        .order("order_index", { ascending: true }),
-      supabaseAdmin
-        .from("trip_media")
-        .select(
-          "media:media_id (id, media_type, storage_bucket, storage_path, thumb_path, width, height, duration_seconds, size_bytes)"
-        )
-        .eq("trip_id", tripId),
-    ]);
+  const momentsResult = await supabaseAdmin
+    .from("moments")
+    .select("id, title, content_text, order_index, deleted_at")
+    .eq("trip_id", tripId)
+    .is("deleted_at", null)
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
 
   if (tripResult.error) {
     throw new Error(tripResult.error.message);
@@ -470,78 +448,101 @@ export async function getSharePayload(token: string): Promise<SharePayload | nul
     return null;
   }
 
-  if (highlightsResult.error) {
-    throw new Error(highlightsResult.error.message);
-  }
-
   if (momentsResult.error) {
     throw new Error(momentsResult.error.message);
   }
 
-  if (mediaResult.error) {
-    throw new Error(mediaResult.error.message);
+  const momentRecords = (momentsResult.data ?? []) as ShareMomentRecord[];
+  const momentIds = momentRecords.map((moment) => moment.id);
+  let momentMediaRows: Array<{
+    moment_id: string;
+    order_index: number | null;
+    media: ShareMediaRecord | ShareMediaRecord[] | null;
+  }> = [];
+
+  if (momentIds.length) {
+    const { data: momentMedia, error: momentMediaError } = await supabaseAdmin
+      .from("moment_media")
+      .select(
+        "moment_id, order_index, media:media_id (id, media_type, storage_bucket, storage_path, thumb_path, width, height, duration_seconds, size_bytes)"
+      )
+      .in("moment_id", momentIds);
+
+    if (momentMediaError) {
+      throw new Error(momentMediaError.message);
+    }
+
+    momentMediaRows = momentMedia ?? [];
   }
 
-  const highlights = visibility.show_highlights
-    ? normalizeHighlights(highlightsResult.data?.highlight_items ?? [])
-    : [];
+  const mediaByMoment = new Map<
+    string,
+    Array<{ order: number; media: ShareMediaRecord }>
+  >();
+  momentMediaRows.forEach((row) => {
+    const mediaValue = row.media as
+      | ShareMediaRecord
+      | ShareMediaRecord[]
+      | null;
+    const media = Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+    if (!media) return;
+    const bucket = mediaByMoment.get(row.moment_id) ?? [];
+    const order =
+      typeof row.order_index === "number" ? row.order_index : Number.MAX_SAFE_INTEGER;
+    bucket.push({ order, media });
+    mediaByMoment.set(row.moment_id, bucket);
+  });
 
-  const moments = visibility.show_moments
-    ? (momentsResult.data ?? []).map((moment) => {
-        const momentRecord = moment as ShareMomentRecord;
-        return {
-          id: momentRecord.id,
-          content_text: momentRecord.content_text,
-          moment_timestamp: privacy.hide_exact_dates
-            ? null
-            : momentRecord.moment_timestamp ?? null,
-          order_index: momentRecord.order_index,
-        };
-      })
-    : [];
-
-  const mediaRecords = (mediaResult.data ?? [])
-    .map((row) => {
-      const mediaValue = row.media as
-        | ShareMediaRecord
-        | ShareMediaRecord[]
-        | null;
-      return Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
-    })
-    .filter((item): item is ShareMediaRecord => Boolean(item));
-
-  const mediaWithUrls = visibility.show_media
+  const storyEntries = visibility.show_moments
     ? await Promise.all(
-        mediaRecords.map(async (media) => {
-          const [previewUrl, fullUrl] = await Promise.all([
-            media.thumb_path
-              ? createSignedUrl(
-                  supabaseAdmin,
-                  media.storage_bucket,
-                  media.thumb_path
-                )
-              : createSignedUrl(
-                  supabaseAdmin,
-                  media.storage_bucket,
-                  media.storage_path
-                ),
-            createSignedUrl(
-              supabaseAdmin,
-              media.storage_bucket,
-              media.storage_path
-            ),
-          ]);
+        momentRecords.map(async (momentRecord, index) => {
+          const records = (mediaByMoment.get(momentRecord.id) ?? [])
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map((item) => item.media);
+          const mediaItems = visibility.show_media
+            ? await Promise.all(
+                records.map(async (media) => {
+                  const [previewUrl, fullUrl] = await Promise.all([
+                    media.thumb_path
+                      ? createSignedUrl(
+                          supabaseAdmin,
+                          media.storage_bucket,
+                          media.thumb_path
+                        )
+                      : createSignedUrl(
+                          supabaseAdmin,
+                          media.storage_bucket,
+                          media.storage_path
+                        ),
+                    createSignedUrl(
+                      supabaseAdmin,
+                      media.storage_bucket,
+                      media.storage_path
+                    ),
+                  ]);
+
+                  return {
+                    id: media.id,
+                    media_type: media.media_type,
+                    preview_url: previewUrl ?? fullUrl,
+                    full_url: fullUrl,
+                    download_url: privacy.allow_downloads ? fullUrl : null,
+                    width: media.width ?? null,
+                    height: media.height ?? null,
+                    duration_seconds: media.duration_seconds ?? null,
+                    size_bytes: media.size_bytes ?? null,
+                  };
+                })
+              )
+            : [];
 
           return {
-            id: media.id,
-            media_type: media.media_type,
-            preview_url: previewUrl ?? fullUrl,
-            full_url: fullUrl,
-            download_url: privacy.allow_downloads ? fullUrl : null,
-            width: media.width ?? null,
-            height: media.height ?? null,
-            duration_seconds: media.duration_seconds ?? null,
-            size_bytes: media.size_bytes ?? null,
+            id: momentRecord.id,
+            title: momentRecord.title ?? null,
+            description: momentRecord.content_text,
+            order_index: momentRecord.order_index ?? index,
+            media: mediaItems,
           };
         })
       )
@@ -557,6 +558,7 @@ export async function getSharePayload(token: string): Promise<SharePayload | nul
       id: tripRecord.id,
       title: tripRecord.title,
       place_name: tripRecord.place_name,
+      story_preset: tripRecord.story_preset ?? null,
       country_code: tripRecord.country_code ?? null,
       lat: visibility.show_globe ? tripRecord.lat ?? null : null,
       lng: visibility.show_globe ? tripRecord.lng ?? null : null,
@@ -574,9 +576,7 @@ export async function getSharePayload(token: string): Promise<SharePayload | nul
       moments_count: visibility.show_stats ? tripRecord.moments_count ?? 0 : 0,
       media_count: visibility.show_stats ? tripRecord.media_count ?? 0 : 0,
     },
-    highlights,
-    moments,
-    media: mediaWithUrls,
+    story_entries: storyEntries,
   };
 }
 
@@ -627,34 +627,21 @@ export async function getTripSharePayloadForLink(
       : null;
 
   const tripId = shareLinkRecord.trip_id;
+  const tripResult = await supabaseAdmin
+    .from("trips")
+    .select(
+      "id, owner_id, title, place_name, story_preset, country_code, lat, lng, start_date, end_date, short_description, tags, deleted_at, moments_count, media_count"
+    )
+    .eq("id", tripId)
+    .maybeSingle();
 
-  const [tripResult, highlightsResult, momentsResult, mediaResult] =
-    await Promise.all([
-      supabaseAdmin
-        .from("trips")
-        .select(
-          "id, owner_id, title, place_name, country_code, lat, lng, start_date, end_date, short_description, tags, deleted_at, moments_count, media_count"
-        )
-        .eq("id", tripId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("trip_highlights")
-        .select("highlight_items")
-        .eq("trip_id", tripId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("moments")
-        .select("id, content_text, moment_timestamp, order_index, deleted_at")
-        .eq("trip_id", tripId)
-        .is("deleted_at", null)
-        .order("order_index", { ascending: true }),
-      supabaseAdmin
-        .from("trip_media")
-        .select(
-          "media:media_id (id, media_type, storage_bucket, storage_path, thumb_path, width, height, duration_seconds, size_bytes)"
-        )
-        .eq("trip_id", tripId),
-    ]);
+  const momentsResult = await supabaseAdmin
+    .from("moments")
+    .select("id, title, content_text, order_index, deleted_at")
+    .eq("trip_id", tripId)
+    .is("deleted_at", null)
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
 
   if (tripResult.error) {
     throw new Error(tripResult.error.message);
@@ -670,78 +657,101 @@ export async function getTripSharePayloadForLink(
     return null;
   }
 
-  if (highlightsResult.error) {
-    throw new Error(highlightsResult.error.message);
-  }
-
   if (momentsResult.error) {
     throw new Error(momentsResult.error.message);
   }
 
-  if (mediaResult.error) {
-    throw new Error(mediaResult.error.message);
+  const momentRecords = (momentsResult.data ?? []) as ShareMomentRecord[];
+  const momentIds = momentRecords.map((moment) => moment.id);
+  let momentMediaRows: Array<{
+    moment_id: string;
+    order_index: number | null;
+    media: ShareMediaRecord | ShareMediaRecord[] | null;
+  }> = [];
+
+  if (momentIds.length) {
+    const { data: momentMedia, error: momentMediaError } = await supabaseAdmin
+      .from("moment_media")
+      .select(
+        "moment_id, order_index, media:media_id (id, media_type, storage_bucket, storage_path, thumb_path, width, height, duration_seconds, size_bytes)"
+      )
+      .in("moment_id", momentIds);
+
+    if (momentMediaError) {
+      throw new Error(momentMediaError.message);
+    }
+
+    momentMediaRows = momentMedia ?? [];
   }
 
-  const highlights = visibility.show_highlights
-    ? normalizeHighlights(highlightsResult.data?.highlight_items ?? [])
-    : [];
+  const mediaByMoment = new Map<
+    string,
+    Array<{ order: number; media: ShareMediaRecord }>
+  >();
+  momentMediaRows.forEach((row) => {
+    const mediaValue = row.media as
+      | ShareMediaRecord
+      | ShareMediaRecord[]
+      | null;
+    const media = Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
+    if (!media) return;
+    const bucket = mediaByMoment.get(row.moment_id) ?? [];
+    const order =
+      typeof row.order_index === "number" ? row.order_index : Number.MAX_SAFE_INTEGER;
+    bucket.push({ order, media });
+    mediaByMoment.set(row.moment_id, bucket);
+  });
 
-  const moments = visibility.show_moments
-    ? (momentsResult.data ?? []).map((moment) => {
-        const momentRecord = moment as ShareMomentRecord;
-        return {
-          id: momentRecord.id,
-          content_text: momentRecord.content_text,
-          moment_timestamp: privacy.hide_exact_dates
-            ? null
-            : momentRecord.moment_timestamp ?? null,
-          order_index: momentRecord.order_index,
-        };
-      })
-    : [];
-
-  const mediaRecords = (mediaResult.data ?? [])
-    .map((row) => {
-      const mediaValue = row.media as
-        | ShareMediaRecord
-        | ShareMediaRecord[]
-        | null;
-      return Array.isArray(mediaValue) ? mediaValue[0] ?? null : mediaValue;
-    })
-    .filter((item): item is ShareMediaRecord => Boolean(item));
-
-  const mediaWithUrls = visibility.show_media
+  const storyEntries = visibility.show_moments
     ? await Promise.all(
-        mediaRecords.map(async (media) => {
-          const [previewUrl, fullUrl] = await Promise.all([
-            media.thumb_path
-              ? createSignedUrl(
-                  supabaseAdmin,
-                  media.storage_bucket,
-                  media.thumb_path
-                )
-              : createSignedUrl(
-                  supabaseAdmin,
-                  media.storage_bucket,
-                  media.storage_path
-                ),
-            createSignedUrl(
-              supabaseAdmin,
-              media.storage_bucket,
-              media.storage_path
-            ),
-          ]);
+        momentRecords.map(async (momentRecord, index) => {
+          const records = (mediaByMoment.get(momentRecord.id) ?? [])
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map((item) => item.media);
+          const mediaItems = visibility.show_media
+            ? await Promise.all(
+                records.map(async (media) => {
+                  const [previewUrl, fullUrl] = await Promise.all([
+                    media.thumb_path
+                      ? createSignedUrl(
+                          supabaseAdmin,
+                          media.storage_bucket,
+                          media.thumb_path
+                        )
+                      : createSignedUrl(
+                          supabaseAdmin,
+                          media.storage_bucket,
+                          media.storage_path
+                        ),
+                    createSignedUrl(
+                      supabaseAdmin,
+                      media.storage_bucket,
+                      media.storage_path
+                    ),
+                  ]);
+
+                  return {
+                    id: media.id,
+                    media_type: media.media_type,
+                    preview_url: previewUrl ?? fullUrl,
+                    full_url: fullUrl,
+                    download_url: privacy.allow_downloads ? fullUrl : null,
+                    width: media.width ?? null,
+                    height: media.height ?? null,
+                    duration_seconds: media.duration_seconds ?? null,
+                    size_bytes: media.size_bytes ?? null,
+                  };
+                })
+              )
+            : [];
 
           return {
-            id: media.id,
-            media_type: media.media_type,
-            preview_url: previewUrl ?? fullUrl,
-            full_url: fullUrl,
-            download_url: privacy.allow_downloads ? fullUrl : null,
-            width: media.width ?? null,
-            height: media.height ?? null,
-            duration_seconds: media.duration_seconds ?? null,
-            size_bytes: media.size_bytes ?? null,
+            id: momentRecord.id,
+            title: momentRecord.title ?? null,
+            description: momentRecord.content_text,
+            order_index: momentRecord.order_index ?? index,
+            media: mediaItems,
           };
         })
       )
@@ -757,6 +767,7 @@ export async function getTripSharePayloadForLink(
       id: tripRecord.id,
       title: tripRecord.title,
       place_name: tripRecord.place_name,
+      story_preset: tripRecord.story_preset ?? null,
       country_code: tripRecord.country_code ?? null,
       lat: visibility.show_globe ? tripRecord.lat ?? null : null,
       lng: visibility.show_globe ? tripRecord.lng ?? null : null,
@@ -774,8 +785,6 @@ export async function getTripSharePayloadForLink(
       moments_count: visibility.show_stats ? tripRecord.moments_count ?? 0 : 0,
       media_count: visibility.show_stats ? tripRecord.media_count ?? 0 : 0,
     },
-    highlights,
-    moments,
-    media: mediaWithUrls,
+    story_entries: storyEntries,
   };
 }

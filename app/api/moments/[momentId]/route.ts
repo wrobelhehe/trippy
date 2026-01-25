@@ -10,6 +10,7 @@ export async function PATCH(
     const { momentId } = await params;
     const body = await request.json();
     const moment = await updateMoment(momentId, {
+      title: body.title,
       contentText: body.contentText,
       momentTimestamp: body.momentTimestamp,
       orderIndex: body.orderIndex,

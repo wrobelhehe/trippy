@@ -1,24 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Link2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 
-import { ShareTripView } from "@/components/share/ShareTripView";
+import { SimpleShareLink } from "@/components/share/SimpleShareLink";
+import {
+  TripStoryPresentation,
+  type StoryEntry,
+} from "@/components/trips/TripStoryPresentation";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { getTripSharePayloadForLink, type ShareLinkRecord } from "@/lib/share/serializer";
-import { listShareLinks } from "@/lib/share/share-links";
+import type { GlobePin } from "@/components/globe/GlobePins";
+import { listMomentsWithMedia } from "@/lib/supabase/moments";
 import { getTrip } from "@/lib/supabase/trips";
-
-function pickActiveLink(links: ShareLinkRecord[]) {
-  const now = Date.now();
-  return links.find((link) => {
-    if (link.revoked_at) return false;
-    if (link.expires_at && new Date(link.expires_at).getTime() <= now) {
-      return false;
-    }
-    return true;
-  });
-}
 
 export default async function TripPreviewPage({
   params,
@@ -32,43 +24,69 @@ export default async function TripPreviewPage({
     notFound();
   }
 
-  const links = (await listShareLinks({
-    tripId: trip.id,
-    scope: "trip",
-  })) as ShareLinkRecord[];
-  const activeLink = pickActiveLink(links);
-  const previewPayload = activeLink
-    ? await getTripSharePayloadForLink(activeLink)
-    : null;
+  const moments = await listMomentsWithMedia(trip.id);
+  const entries: StoryEntry[] = moments.map((moment) => ({
+    id: moment.id,
+    title: moment.title,
+    description: moment.content_text,
+    media: moment.media.map((media) => ({
+      id: media.id,
+      mediaType: media.media_type,
+      url: media.public_url ?? null,
+    })),
+  }));
 
-  if (!previewPayload) {
-    return (
-      <EmptyState
-        icon={Link2}
-        title="No share preview yet"
-        description="Create a share link to preview the guest experience."
-        actionLabel="Edit trip"
-        actionHref={`/trips/${trip.id}/edit`}
-        className="border-white/10 bg-[color:var(--panel)]/70"
-      />
-    );
-  }
+  const hasCoordinates = trip.lat !== null && trip.lng !== null;
+  const pins: GlobePin[] = hasCoordinates
+    ? [
+        {
+          id: trip.id,
+          lat: trip.lat ?? 0,
+          lng: trip.lng ?? 0,
+          title: trip.title,
+          placeName: trip.place_name,
+          momentsCount: trip.moments_count,
+          mediaCount: trip.media_count,
+        },
+      ]
+    : [];
 
   return (
-    <div className="-mx-4 md:-mx-8">
-      <ShareTripView
-        payload={previewPayload}
+    <div className="space-y-10">
+      <div className="flex justify-end">
+        <Button asChild className="gap-2">
+          <Link href={`/trips/${trip.id}/edit`}>
+            Edit trip
+            <Pencil className="size-4" />
+          </Link>
+        </Button>
+      </div>
+      <TripStoryPresentation
+        title={trip.title}
+        city={trip.place_name}
+        countryCode={trip.country_code ?? null}
+        startDate={trip.start_date}
+        endDate={trip.end_date}
+        preset={(trip.story_preset ?? "postcards") as
+          | "postcards"
+          | "album"
+          | "carousel"
+          | "collage"
+          | "cinematic"
+          | "journal"}
+        entries={entries}
+        globePins={pins}
+        focusPinId={hasCoordinates ? trip.id : null}
+        label="Trip story"
         fullBleed
-        headerLabel="Trip preview"
-        headerAction={(
-          <Button asChild className="gap-2">
-            <Link href={`/trips/${trip.id}/edit`}>
-              Edit trip
-              <Pencil className="size-4" />
-            </Link>
-          </Button>
-        )}
-        showGuestCta={false}
+      />
+
+      <SimpleShareLink
+        scope="trip"
+        tripId={trip.id}
+        title="Share this trip"
+        description="One tap creates a shareable link for this story."
+        ctaLabel="Create share link"
       />
     </div>
   );

@@ -88,7 +88,11 @@ export async function attachMediaToTrip(tripId: string, mediaId: string) {
   }
 }
 
-export async function attachMediaToMoment(momentId: string, mediaId: string) {
+export async function attachMediaToMoment(
+  momentId: string,
+  mediaId: string,
+  orderIndex?: number | null
+) {
   const { supabase, userId } = await requireUserId();
   const { data: moment, error: momentError } = await supabase
     .from("moments")
@@ -101,10 +105,30 @@ export async function attachMediaToMoment(momentId: string, mediaId: string) {
     throw new Error("Moment not found.");
   }
 
+  let nextOrderIndex = orderIndex ?? null;
+  if (nextOrderIndex === null) {
+    const { data: existing, error: orderError } = await supabase
+      .from("moment_media")
+      .select("order_index")
+      .eq("moment_id", momentId)
+      .eq("owner_id", userId)
+      .order("order_index", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (orderError) {
+      throw new Error(orderError.message);
+    }
+
+    nextOrderIndex =
+      typeof existing?.order_index === "number" ? existing.order_index + 1 : 0;
+  }
+
   const { error } = await supabase.from("moment_media").insert({
     moment_id: momentId,
     media_id: mediaId,
     owner_id: userId,
+    order_index: nextOrderIndex,
   });
 
   if (error) {
@@ -146,9 +170,10 @@ export async function listMomentMedia(momentId: string) {
   const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("moment_media")
-    .select("media:media_id (*)")
+    .select("order_index, media:media_id (*)")
     .eq("moment_id", momentId)
-    .eq("owner_id", userId);
+    .eq("owner_id", userId)
+    .order("order_index", { ascending: true });
 
   if (error) {
     throw new Error(error.message);
@@ -170,4 +195,36 @@ export async function listMomentMedia(momentId: string) {
       };
     })
     .filter((item): item is Media => Boolean(item));
+}
+
+export async function updateMomentMediaOrder(
+  momentId: string,
+  mediaId: string,
+  orderIndex: number
+) {
+  const { supabase, userId } = await requireUserId();
+  const { error } = await supabase
+    .from("moment_media")
+    .update({ order_index: orderIndex })
+    .eq("moment_id", momentId)
+    .eq("media_id", mediaId)
+    .eq("owner_id", userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function detachMediaFromMoment(momentId: string, mediaId: string) {
+  const { supabase, userId } = await requireUserId();
+  const { error } = await supabase
+    .from("moment_media")
+    .delete()
+    .eq("moment_id", momentId)
+    .eq("media_id", mediaId)
+    .eq("owner_id", userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
